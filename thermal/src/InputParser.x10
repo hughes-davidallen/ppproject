@@ -10,27 +10,27 @@ public class InputParser{
 		val input = new File(filename);
 		val lines = input.lines();
 
-		x = Int.parse(lines.next().trim()) - 1;
-		y = Int.parse(lines.next().trim()) - 1;
-		z = Int.parse(lines.next().trim()) - 1;
+		x = Int.parse(lines.next().trim());
+		y = Int.parse(lines.next().trim());
+		z = Int.parse(lines.next().trim());
 
-		val reg = (0..x)*(0..y)*(0..z);
-
-		val data = new Array[Double](reg, 0);
+		val reg = (1..x)*(1..y)*(1..z);
+		val data = new Array[Double](reg);
 
 		var temps:Array[String];
 
-		for (k in 0..z)
-			for (j in 0..y) {
+		for (k in 1..z) {
+			for (j in 1..y) {
 				temps = lines.next().split(",");
-				for (i in 0..x) {
-					data(i,j,k) = Double.parse(temps(i).trim());
+				for (i in 1..x) {
+					data(i,j,k) = Double.parse(temps(i-1).trim());
 				}
 			}
+		}
 /*
-		for (k in 0..z) {
-			for (j in 0..y) {
-				for (i in 0..x)
+		for (k in 1..z) {
+			for (j in 1..y) {
+				for (i in 1..x)
 					Console.OUT.print(data(i,j,k) + " ");
 				Console.OUT.println();
 			}
