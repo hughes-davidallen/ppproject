@@ -6,7 +6,7 @@ public class OutputPrinter {
 	 * Prints the contents of 3-dimensional Array mat
 	 * to standard output.
 	 */
-	public static def printm(mat:Array[Double]) {
+	public static def printm(mat:Array[Double](3)) {
 		printm(Console.OUT, mat);
 	}
 
@@ -14,7 +14,7 @@ public class OutputPrinter {
 	 * Prints the contents of 3-dimensional Array mat
 	 * to a file name by filename.
 	 */
-	public static def printm(filename:String, mat:Array[Double]) {
+	public static def printm(filename:String, mat:Array[Double](3)) {
 		val file = new File(filename);
 		printm(file, mat);
 	}
@@ -22,7 +22,7 @@ public class OutputPrinter {
 	/**
 	 * Prints the contents of 3-dimensional Array mat to file
 	 */
-	public static def printm(file:File, mat:Array[Double]) {
+	public static def printm(file:File, mat:Array[Double](3)) {
 		printm(file.printer(), mat);
 	}
 
@@ -30,7 +30,7 @@ public class OutputPrinter {
 	 * Prints the contents of 3-dimensional Array mat using
 	 * Printer p
 	 */
-	public static def printm(p:Printer, mat:Array[Double]) {
+	public static def printm(p:Printer, mat:Array[Double](3)) {
 		val x_size = mat.region.max(0);
 		val y_size = mat.region.max(1);
 		val z_size = mat.region.max(2);
@@ -40,8 +40,8 @@ public class OutputPrinter {
 			for (j in 0..y_size) 
 			{
 				for (i in 0..x_size)
-					p.print(mat(i,j,k) + " ");
-				p.println();
+					p.print(mat(i,j,k) + ((i == x_size)?"":", "));
+				p.println((j == y_size)?";":":");
 		 	}
 			p.println();
 		}
