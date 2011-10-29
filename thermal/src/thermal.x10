@@ -72,17 +72,7 @@ public class thermal
 		}
 		
 		//print to console
-		for (k in 1..z_size) 
-		{
-			for (j in 1..y_size) 
-			{
-				for (i in 1..x_size)
-					Console.OUT.print(A2(i,j,k) + " ");
-				Console.OUT.println();
-		 	}
-			
-			Console.OUT.println();
-		}
+		OutputPrinter.printm(A2);
 		Console.OUT.println("--------------------------");
 	}
 	
