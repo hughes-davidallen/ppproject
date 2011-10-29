@@ -27,8 +27,8 @@ public class InputParser{
 				}
 			}
 		}
-/*
-		for (k in 1..z) {
+
+		/*for (k in 1..z) {
 			for (j in 1..y) {
 				for (i in 1..x)
 					Console.OUT.print(data(i,j,k) + " ");
@@ -36,12 +36,8 @@ public class InputParser{
 			}
 			Console.OUT.println();
 		}
-*/
+		*/
 
 		return data;
-	}
-
-	public static def main(args:Array[String](1)):void {
-		parse(args(0));
 	}
 }
