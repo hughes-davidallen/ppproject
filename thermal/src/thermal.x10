@@ -32,14 +32,15 @@ public class thermal
 			}
 		}
 		
-		//fill in border data
-		borderFill(A, x_source_size, y_source_size, z_source_size);
-		borderFill(B, x_source_size, y_source_size, z_source_size);
-		
 		//do loop with calculations, alternating working arrays read/write
 		//we'll start with 5 iterations for now
 		for (i in 1..5)
 		{
+			//fill in border data
+			borderFill(A, x_source_size, y_source_size, z_source_size);
+			borderFill(B, x_source_size, y_source_size, z_source_size);
+		
+			//do cell averaging
 			Console.OUT.println("Iteration "+ i + ":");
 			if(i % 2 == 0) calc(A, B, x_source_size, y_source_size, z_source_size);
 			else calc(B, A, x_source_size, y_source_size, z_source_size);
