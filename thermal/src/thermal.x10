@@ -48,8 +48,13 @@ public class thermal
 
 			//do cell averaging
 			Console.OUT.println("Iteration "+ i + ":");
-			if(i % 2 == 0) calc(A, B, x_source_size, y_source_size, z_source_size);
+			val even = (i % 2 == 0);
+			if(even) calc(A, B, x_source_size, y_source_size, z_source_size);
 			else calc(B, A, x_source_size, y_source_size, z_source_size);
+		
+			//print to console
+			OutputPrinter.printm(even?B:A);
+			Console.OUT.println("--------------------------");
 		}
 
 		val stoptime = Timer.milliTime() - starttime;
@@ -70,18 +75,14 @@ public class thermal
 				{
 					//do math with A1 pixels, write to A2
 					A2(i,j,k) =	(A1(i+1, j, k) +
-								 A1(i-1, j, k) +
-								 A1(i, j+1, k) +
-								 A1(i, j-1, k) +
-								 A1(i, j, k+1) +
-								 A1(i, j, k-1)) / 6;
+								A1(i-1, j, k) +
+								A1(i, j+1, k) +
+								A1(i, j-1, k) +
+								A1(i, j, k+1) +
+							 	A1(i, j, k-1)) / 6;
 				}
 			}
 		}
-		
-		//print to console
-		OutputPrinter.printm(A2);
-		Console.OUT.println("--------------------------");
 	}
 	
 	public static def borderFill(A:Array[Double](3), x_max:Int, y_max:Int, z_max:Int)
