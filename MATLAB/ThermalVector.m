@@ -1,5 +1,9 @@
 % Import our input file as a 1D array
+<<<<<<< HEAD
 M = importdata('/home/tjr2126/4130/project/thermal/src/input.txt', ',');
+=======
+M = importdata('../thermal/src/output.txt', ',');
+>>>>>>> 2cc910f657da890b4407501a7058d84ef1dd8471
 
 % Read first 3 values to get dimensions
 x_size = M(1);
@@ -35,6 +39,7 @@ zmax = z_size;
 
 hold on
 
+<<<<<<< HEAD
 %h = slice(A);
  
 hx = slice(x,y,z,A,(xmax+1)/2,[],[]);
@@ -42,3 +47,12 @@ set(hx,'FaceColor','flat','EdgeColor','none')
  
 hz = slice(x,y,z,A,[],[],(zmax+1)/2);
 set(hz,'FaceColor','flat','EdgeColor','none')
+=======
+% h = slice(A);
+ 
+hx = slice(x,y,z,A,(xmax+1)/2,[],[]);
+set(hx,'FaceColor','interp','EdgeColor','none')
+
+hz = slice(x,y,z,A,[],[],(zmax+1)/2);
+set(hz,'FaceColor','interp','EdgeColor','none')
+>>>>>>> 2cc910f657da890b4407501a7058d84ef1dd8471
