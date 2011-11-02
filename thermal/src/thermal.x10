@@ -79,6 +79,7 @@ public class thermal
 	
 	public static def borderFill(A:Array[Double](3), x_max:Int, y_max:Int, z_max:Int)
 	{
+/*
 		//x passes
 		
 		//bottom-front edge
@@ -112,5 +113,26 @@ public class thermal
 		for(i in 1..(z_max-1)) A(0, y_max, i)		= A(1, y_max, i);
 		//top-right edge
 		for(i in 1..(z_max-1)) A(x_max, y_max, i)	= A((x_max-1), y_max, i);
+*/
+		//Top and Bottom
+		for (i in 1..x_max)
+			for (j in 1..y_max) {
+				A(i, j, 0) = A(i, j, 1);
+				A(i, j, z_max + 1) = A(i, j, z_max);
+			}
+
+		//Front and Back
+		for (i in 1..x_max)
+			for (k in 0..z_max + 1) {
+				A(i, 0, k) = A(i, 1, k);
+				A(i, y_max + 1, k) = A(i, y_max, k);
+			}
+
+		//Left and Right
+		for (j in 0..y_max + 1)
+			for (k in 0..z_max + 1) {
+				A(0, j, k) = A(1, j, k);
+				A(x_max + 1, j, k) = A(x_max, j, k);
+			}
 	}
 }
