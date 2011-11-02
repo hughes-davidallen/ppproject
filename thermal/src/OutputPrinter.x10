@@ -35,12 +35,16 @@ public class OutputPrinter {
 		val y_size = mat.region.max(1);
 		val z_size = mat.region.max(2);
 
+		p.println(x_size + 1);
+		p.println(y_size + 1);
+		p.println(z_size + 1);
+
 		for (k in 0..z_size) 
 		{
 			for (j in 0..y_size) 
 			{
 				for (i in 0..x_size)
-					p.print(mat(i,j,k) + ((i == x_size)?"":", "));
+					p.printf("%.4f%s", mat(i,j,k), ((i == x_size)?"":", "));
 				p.println();
 		 	}
 			p.println();
