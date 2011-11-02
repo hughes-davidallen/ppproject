@@ -79,41 +79,6 @@ public class thermal
 	
 	public static def borderFill(A:Array[Double](3), x_max:Int, y_max:Int, z_max:Int)
 	{
-/*
-		//x passes
-		
-		//bottom-front edge
-		for(i in 1..(x_max-1)) A(i, 0, 0)			= A(i, 1, 0);
-		//top-front edge
-		for(i in 1..(x_max-1)) A(i, y_max, 0)		= A(i, (y_max - 1), 0);
-		//bottom-back edge
-		for(i in 1..(x_max-1)) A(i, 0, z_max) 		= A(i, 1, z_max);
-		//top-back edge
-		for(i in 1..(x_max-1)) A(i, y_max, z_max)	= A(i, (y_max - 1), z_max);
-		
-		//y passes
-		
-		//left-front edge
-		for(i in 1..(y_max-1)) A(0, i, 0)			= A(1, i, 0);
-		//right-front edge
-		for(i in 1..(y_max-1)) A(x_max, i, 0)		= A((x_max-1), i, 0);
-		//left-back edge
-		for(i in 1..(y_max-1)) A(0, i, z_max)		= A(1, i, z_max);
-		//right-back edge
-		for(i in 1..(y_max-1)) A(x_max, i, z_max)	= A((x_max-1), i, z_max);
-		
-		
-		//z passes
-		
-		//left-bottom edge
-		for(i in 1..(z_max-1)) A(0, 0, i)			= A(1, 0, i);
-		//right-bottom edge
-		for(i in 1..(z_max-1)) A(x_max, 0, i)		= A((x_max-1), 0, i);
-		//top-left edge
-		for(i in 1..(z_max-1)) A(0, y_max, i)		= A(1, y_max, i);
-		//top-right edge
-		for(i in 1..(z_max-1)) A(x_max, y_max, i)	= A((x_max-1), y_max, i);
-*/
 		//Top and Bottom
 		for (i in 1..x_max)
 			for (j in 1..y_max) {
