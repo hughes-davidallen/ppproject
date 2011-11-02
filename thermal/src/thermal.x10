@@ -56,16 +56,13 @@ public class thermal
 			borderFill(A, x_source_size, y_source_size, z_source_size);
 			borderFill(B, x_source_size, y_source_size, z_source_size);
 
-			if (verbose)
-				Console.OUT.println("Iteration "+ i + ":");
-
 			//do cell averaging
 			val even = (i % 2 == 0);
 			if(even) calc(A, B, x_source_size, y_source_size, z_source_size);
 			else calc(B, A, x_source_size, y_source_size, z_source_size);
 		
 			if (verbose) {
-				//print to console
+				Console.OUT.println("Iteration "+ i + ":");
 				OutputPrinter.printm(even?B:A);
 				Console.OUT.println("--------------------------");
 			}
