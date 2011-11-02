@@ -1,6 +1,6 @@
-x = 10;
-y = 10;
-z = 10;
+x = 100;
+y = 100;
+z = 100;
 
 A = zeros(x,y,z);
 
@@ -19,7 +19,7 @@ for k = 1 : z
 end
 
 %print to file
-fid = fopen('input_large2.txt', 'w');
+fid = fopen('input_large100.txt', 'w');
 
 fprintf(fid, '%d\n', x);
 fprintf(fid, '%d\n', y);
