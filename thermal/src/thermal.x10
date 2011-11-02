@@ -2,11 +2,21 @@ import x10.util.Timer;
 
 public class thermal 
 {
+	/**
+	 * The command-line arguments to thermal are as follows:
+	 * args(0) is a string and represents the name of the file
+	 *         from which to read the input to the program
+	 * args(1) is an integer and represents the number of
+	 *         iterations for which to run the program
+	 * args(2) is either 'true' or 'false' and signifies whether
+	 *         the intermediate results of the computation
+	 */
 	public static def main(args:Array[String](1)):void 
 	{
 		//get source array from file
 		val source = InputParser.parse(args(0));
 		val iterations = Int.parse(args(1));
+		val verbose = Boolean.parse(args(2));
 
 		//get dimensions of source array
 		val source_reg:Region = source.region;
@@ -46,21 +56,26 @@ public class thermal
 			borderFill(A, x_source_size, y_source_size, z_source_size);
 			borderFill(B, x_source_size, y_source_size, z_source_size);
 
+			if (verbose)
+				Console.OUT.println("Iteration "+ i + ":");
+
 			//do cell averaging
-			Console.OUT.println("Iteration "+ i + ":");
 			val even = (i % 2 == 0);
 			if(even) calc(A, B, x_source_size, y_source_size, z_source_size);
 			else calc(B, A, x_source_size, y_source_size, z_source_size);
 		
-			//print to console
-			OutputPrinter.printm(even?B:A);
-			Console.OUT.println("--------------------------");
+			if (verbose) {
+				//print to console
+				OutputPrinter.printm(even?B:A);
+				Console.OUT.println("--------------------------");
+			}
 		}
 
 		val stoptime = Timer.milliTime() - starttime;
 
 		//DONE
 		Console.OUT.println("DONE in " + stoptime + " milliseconds");
+		//Print final results to output file
 		OutputPrinter.printm("output.txt", A);
 	}
 
