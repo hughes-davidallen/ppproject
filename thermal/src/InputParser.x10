@@ -27,17 +27,6 @@ public class InputParser{
 				}
 			}
 		}
-
-		/*for (k in 1..z) {
-			for (j in 1..y) {
-				for (i in 1..x)
-					Console.OUT.print(data(i,j,k) + " ");
-				Console.OUT.println();
-			}
-			Console.OUT.println();
-		}
-		*/
-
 		return data;
 	}
 }

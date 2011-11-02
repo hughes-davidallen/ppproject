@@ -32,14 +32,15 @@ public class thermal
 			}
 		}
 		
-		//fill in border data
-		borderFill(A, x_source_size, y_source_size, z_source_size);
-		borderFill(B, x_source_size, y_source_size, z_source_size);
-		
 		//do loop with calculations, alternating working arrays read/write
 		//we'll start with 5 iterations for now
 		for (i in 1..5)
 		{
+			//fill in border data
+			borderFill(A, x_source_size, y_source_size, z_source_size);
+			borderFill(B, x_source_size, y_source_size, z_source_size);
+		
+			//do cell averaging
 			Console.OUT.println("Iteration "+ i + ":");
 			if(i % 2 == 0) calc(A, B, x_source_size, y_source_size, z_source_size);
 			else calc(B, A, x_source_size, y_source_size, z_source_size);
@@ -78,38 +79,25 @@ public class thermal
 	
 	public static def borderFill(A:Array[Double](3), x_max:Int, y_max:Int, z_max:Int)
 	{
-		//x passes
-		
-		//bottom-front edge
-		for(i in 1..(x_max-1)) A(i, 0, 0)			= A(i, 1, 0);
-		//top-front edge
-		for(i in 1..(x_max-1)) A(i, y_max, 0)		= A(i, (y_max - 1), 0);
-		//bottom-back edge
-		for(i in 1..(x_max-1)) A(i, 0, z_max) 		= A(i, 1, z_max);
-		//top-back edge
-		for(i in 1..(x_max-1)) A(i, y_max, z_max)	= A(i, (y_max - 1), z_max);
-		
-		//y passes
-		
-		//left-front edge
-		for(i in 1..(y_max-1)) A(0, i, 0)			= A(1, i, 0);
-		//right-front edge
-		for(i in 1..(y_max-1)) A(x_max, i, 0)		= A((x_max-1), i, 0);
-		//left-back edge
-		for(i in 1..(y_max-1)) A(0, i, z_max)		= A(1, i, z_max);
-		//right-back edge
-		for(i in 1..(y_max-1)) A(x_max, i, z_max)	= A((x_max-1), i, z_max);
-		
-		
-		//z passes
-		
-		//left-bottom edge
-		for(i in 1..(z_max-1)) A(0, 0, i)			= A(1, 0, i);
-		//right-bottom edge
-		for(i in 1..(z_max-1)) A(x_max, 0, i)		= A((x_max-1), 0, i);
-		//top-left edge
-		for(i in 1..(z_max-1)) A(0, y_max, i)		= A(1, y_max, i);
-		//top-right edge
-		for(i in 1..(z_max-1)) A(x_max, y_max, i)	= A((x_max-1), y_max, i);
+		//Top and Bottom
+		for (i in 1..x_max)
+			for (j in 1..y_max) {
+				A(i, j, 0) = A(i, j, 1);
+				A(i, j, z_max + 1) = A(i, j, z_max);
+			}
+
+		//Front and Back
+		for (i in 1..x_max)
+			for (k in 0..z_max + 1) {
+				A(i, 0, k) = A(i, 1, k);
+				A(i, y_max + 1, k) = A(i, y_max, k);
+			}
+
+		//Left and Right
+		for (j in 0..y_max + 1)
+			for (k in 0..z_max + 1) {
+				A(0, j, k) = A(1, j, k);
+				A(x_max + 1, j, k) = A(x_max, j, k);
+			}
 	}
 }
