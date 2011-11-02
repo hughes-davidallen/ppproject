@@ -127,14 +127,14 @@ public class thermal
 
 		//Front and Back
 		for (i in 1..x_max)
-			for (k in 0..z_max) {
+			for (k in 1..z_max) {
 				A(i, 0, k) = A(i, 1, k);
 				A(i, y_max + 1, k) = A(i, y_max, k);
 			}
 
 		//Left and Right
-		for (j in 0..y_max)
-			for (k in 0..z_max) {
+		for (j in 1..y_max)
+			for (k in 1..z_max) {
 				A(0, j, k) = A(1, j, k);
 				A(x_max + 1, j, k) = A(x_max, j, k);
 			}
