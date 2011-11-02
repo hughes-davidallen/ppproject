@@ -17,11 +17,16 @@ public class InputParser{
 		val reg = (1..x)*(1..y)*(1..z);
 		val data = new Array[Double](reg);
 
+		var line:String;
 		var temps:Array[String];
 
 		for (k in 1..z) {
 			for (j in 1..y) {
-				temps = lines.next().split(",");
+                line = lines.next();
+                while (line.length() < 2) {
+					line = lines.next();
+				}
+				temps = line.split(",");
 				for (i in 1..x) {
 					data(i,j,k) = Double.parse(temps(i-1).trim());
 				}
