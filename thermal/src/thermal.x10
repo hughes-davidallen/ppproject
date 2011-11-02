@@ -1,24 +1,27 @@
+import x10.util.Timer;
+
 public class thermal 
 {
 	public static def main(args:Array[String](1)):void 
 	{
 		//get source array from file
 		val source = InputParser.parse(args(0));
-		
+		val iterations = Int.parse(args(1));
+
 		//get dimensions of source array
 		val source_reg:Region = source.region;
 		val x_source_size:Int = source_reg.max(0);
 		val y_source_size:Int = source_reg.max(1);
 		val z_source_size:Int = source_reg.max(2);
-		
+
 		//create new, larger region for border data
 		val work_reg:Region = 
 			((0..(x_source_size + 1))*(0..(y_source_size + 1))*(0..(z_source_size+1)));
-		
+
 		//create working arrays
 		var A:Array[Double](3) = new Array[Double](work_reg, 0.0);
 		var B:Array[Double](3) = new Array[Double](work_reg, 0.0);
-		
+
 		//copy source into working arrays
 		for(i in 1..x_source_size)
 		{
@@ -31,25 +34,29 @@ public class thermal
 				}
 			}
 		}
-		
+
+		/* START TIMING */
+		val starttime = Timer.milliTime();
+
 		//do loop with calculations, alternating working arrays read/write
 		//we'll start with 5 iterations for now
-		for (i in 1..5)
+		for (i in 1..iterations)
 		{
 			//fill in border data
 			borderFill(A, x_source_size, y_source_size, z_source_size);
 			borderFill(B, x_source_size, y_source_size, z_source_size);
-		
+
 			//do cell averaging
 			Console.OUT.println("Iteration "+ i + ":");
 			if(i % 2 == 0) calc(A, B, x_source_size, y_source_size, z_source_size);
 			else calc(B, A, x_source_size, y_source_size, z_source_size);
 		}
-		
-		//print results to output file
-		
+
+		val stoptime = Timer.milliTime() - starttime;
+
 		//DONE
-		Console.OUT.println("DONE");
+		Console.OUT.println("DONE in " + stoptime + " milliseconds");
+		OutputPrinter.printm("output.txt", A);
 	}
 
 	//actual thermal transfer vector calcuation
