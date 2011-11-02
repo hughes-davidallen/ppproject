@@ -40,7 +40,7 @@ public class OutputPrinter {
 			for (j in 0..y_size) 
 			{
 				for (i in 0..x_size)
-					p.print(mat(i,j,k) + " ");
+					p.print(mat(i,j,k) + ((i == x_size)?"":", "));
 				p.println();
 		 	}
 			p.println();
