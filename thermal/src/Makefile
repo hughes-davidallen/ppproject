@@ -11,7 +11,7 @@ run_large: thermal.exe
 	./thermal.exe input_large100.txt 100 false
 
 thermal.exe: thermal.x10
-	x10c++ thermal.x10 -o thermal.exe
+	x10c++ -v -t -optimize -O -NO_CHECKS thermal.x10 -o thermal.exe
 
 .PHONY: clean
 clean:
