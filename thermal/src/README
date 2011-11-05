@@ -12,7 +12,9 @@ system at the end of the computation.  This array is printed to a file in
 the same format used by the input file.  The output file can then be
 examined visually using a handy matlab script.  (This script is primarily
 meant to be a sanity check, but it does reveal that the program behaves as
-we expected it to.  Don't worry; we didn't expend a lot of effort on this.)
+we expected it to.  Don't worry; we didn't expend a lot of effort on this.
+More information on this can be found in the README file found in the MATLAB
+directory.)
 
 The program can be compiled from this directory using the Java backend by
 typing 'make thermal' or with the c++ backend by typing 'make thermal.exe'.
