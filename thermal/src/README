@@ -1,0 +1,34 @@
+This is the README file for the serial implementation of thermal, and heat
+flow program written in X10.
+
+thermal takes as input a text file that contains values with which to
+populate a three-dimensional array.  This represents a temperature map.  The
+expected format of the input file is explained in the comments in
+InputParser.x10, and two examples are provided.  The program then steps
+through time and computes the 'new' value for the temperature of each cell
+in the array using an average of the adjacent cells.  The final result is a
+three-dimensional array representing the temperature distribution in the
+system at the end of the computation.  This array is printed to a file in
+the same format used by the input file.  The output file can then be
+examined visually using a handy matlab script.  (This script is primarily
+meant to be a sanity check, but it does reveal that the program behaves as
+we expected it to.  Don't worry; we didn't expend a lot of effort on this.)
+
+The program can be compiled from this directory using the Java backend by
+typing 'make thermal' or with the c++ backend by typing 'make thermal.exe'.
+Command-line arguments for thermal are explained in the comments in
+thermal.x10.
+
+Two input files are supplied, a smaller size and a larger size.  'make run'
+will run thermal on the small input for 7 time steps using the Java backend.
+In addition to the regular output of the program, this option will also
+print the intermediate state of the 3-dimensional array after every time
+step. This is done primarily for debugging.  'make run_large' will run
+thermal on the larger input for 100 time steps using the c++ backend.
+Because the data is much larger and the there are more time steps, no
+intermediate state will be printed.  In both cases, the final state of the
+array is written to a file called output.txt.  After execution, the program
+will print its execution time measured in milliseconds.  (This is done
+before the results are written to the file, which can take quite a while for
+large data sets.  It may take several seconds for the program to return
+after it says it has completed.)
