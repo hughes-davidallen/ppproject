@@ -1,7 +1,10 @@
+%hardcoded size of array, needs to be 
+%changed here in the code
 x = 100;
 y = 100;
 z = 100;
 
+%allocate array of desired size
 A = zeros(x,y,z);
 
 %build first slice
@@ -37,4 +40,5 @@ for k = 1 : (z)
     fprintf(fid, '\n');
 end
 
+%close file
 fclose(fid);
