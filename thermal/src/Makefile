@@ -1,9 +1,11 @@
+HELPERS = InputParser.x10 OutputPrinter.x10
+
 all: thermal thermalPar
 
 .PHONY: thermal
 thermal: thermal.class
 
-thermal.class: thermal.x10 InputParser.x10 OutputPrinter.x10
+thermal.class: thermal.x10 $(HELPERS)
 	x10c thermal.x10
 
 .PHONY: runSeq
@@ -13,13 +15,13 @@ runSeq: thermal
 runSeq_large: thermal.exe
 	./thermal.exe input_large100.txt 100 false
 
-thermal.exe: thermal.x10
+thermal.exe: thermal.x10 $(HELPERS)
 	x10c++ -v -t -optimize -O -NO_CHECKS thermal.x10 -o thermal.exe
 
 .PHONY: thermalPar
 thermalPar: thermalPar.class
 
-thermalPar.class: thermalPar.x10 InputParser.x10 OutputPrinter.x10
+thermalPar.class: thermalPar.x10 $(HELPERS)
 	x10c thermalPar.x10
 
 .PHONY: runPar
@@ -29,14 +31,17 @@ runPar: thermalPar
 runPar_large: thermalPar.exe
 	./thermalPar.exe input_large100.txt 100 false
 
-thermalPar.exe: thermalPar.x10
+thermalPar.exe: thermalPar.x10 $(HELPERS)
 	x10c++ -v -t -optimize -O -NO_CHECKS thermalPar.x10 -o thermalPar.exe
 
 .PHONY: run
 run: runSeq runPar
 
+.PHONY: run_large
+run_large: runSeq_large runPar_large
+
 .PHONY: compare
-compare: run
+compare: run_large
 	diff output.txt outputPar.txt
 
 .PHONY: clean
