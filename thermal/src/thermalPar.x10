@@ -77,7 +77,7 @@ public class thermalPar
 		//DONE
 		Console.OUT.println("DONE in " + stoptime + " milliseconds");
 		//Print final results to output file
-		OutputPrinter.printm("output.txt", A);
+		OutputPrinter.printm("outputPar.txt", A);
 	}
 
 	/**
