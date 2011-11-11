@@ -16,7 +16,7 @@ public class thermal
 		//get source array from file
 		val source = InputParser.parse(args(0));
 		val iterations = Int.parse(args(1));
-		val verb = Boolean.parse(args(2));
+		val verbose = Boolean.parse(args(2));
 
 		//get dimensions of source array
 		val source_reg:Region = source.region;
@@ -62,7 +62,7 @@ public class thermal
 			else
 				calc(B, A, x_source_size, y_source_size, z_source_size);
 		
-			if (verb) {
+			if (verbose) {
 				//Print intermediate data to the Console
 				//This should not be used in performance tests
 				Console.OUT.println("Iteration "+ i + ":");
@@ -118,25 +118,27 @@ public class thermal
 	public static def borderFill(A:Array[Double](3), x_max:Int, y_max:Int,
 									z_max:Int)
 	{
-		//Top and Bottom
-		for (i in 1..x_max)
-			for (j in 1..y_max) {
-				A(i, j, 0) = A(i, j, 1);
-				A(i, j, z_max + 1) = A(i, j, z_max);
-			}
+		finish {
+			//Top and Bottom
+			async for (i in 1..x_max)
+				for (j in 1..y_max) {
+					A(i, j, 0) = A(i, j, 1);
+					A(i, j, z_max + 1) = A(i, j, z_max);
+				}
 
-		//Front and Back
-		for (i in 1..x_max)
-			for (k in 1..z_max) {
-				A(i, 0, k) = A(i, 1, k);
-				A(i, y_max + 1, k) = A(i, y_max, k);
-			}
+			//Front and Back
+			async for (i in 1..x_max)
+				for (k in 1..z_max) {
+					A(i, 0, k) = A(i, 1, k);
+					A(i, y_max + 1, k) = A(i, y_max, k);
+				}
 
-		//Left and Right
-		for (j in 1..y_max)
-			for (k in 1..z_max) {
-				A(0, j, k) = A(1, j, k);
-				A(x_max + 1, j, k) = A(x_max, j, k);
-			}
+			//Left and Right
+			for (j in 1..y_max)
+				for (k in 1..z_max) {
+					A(0, j, k) = A(1, j, k);
+					A(x_max + 1, j, k) = A(x_max, j, k);
+				}
+		}
 	}
 }
