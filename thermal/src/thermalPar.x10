@@ -16,7 +16,7 @@ public class thermal
 		//get source array from file
 		val source = InputParser.parse(args(0));
 		val iterations = Int.parse(args(1));
-		val verbose = Boolean.parse(args(2));
+		val verb = Boolean.parse(args(2));
 
 		//get dimensions of source array
 		val source_reg:Region = source.region;
@@ -62,7 +62,7 @@ public class thermal
 			else
 				calc(B, A, x_source_size, y_source_size, z_source_size);
 		
-			if (verbose) {
+			if (verb) {
 				//Print intermediate data to the Console
 				//This should not be used in performance tests
 				Console.OUT.println("Iteration "+ i + ":");
