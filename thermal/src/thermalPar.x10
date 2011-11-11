@@ -16,7 +16,7 @@ public class thermal
 		//get source array from file
 		val source = InputParser.parse(args(0));
 		val iterations = Int.parse(args(1));
-		val verbose = Boolean.parse(args(2));
+		val verbose = Boolean.parse( args(2) );
 
 		//get dimensions of source array
 		val source_reg:Region = source.region;
