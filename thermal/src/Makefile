@@ -1,5 +1,7 @@
 HELPERS = InputParser.x10 OutputPrinter.x10
 
+CPPFLAGS = -v -t -optimize -O -NO_CHECKS
+
 all: thermal thermalPar
 
 .PHONY: thermal
@@ -16,7 +18,7 @@ runSeq_large: thermal.exe
 	./thermal.exe input_large100.txt 100 false
 
 thermal.exe: thermal.x10 $(HELPERS)
-	x10c++ -v -t -optimize -O -NO_CHECKS thermal.x10 -o thermal.exe
+	x10c++ thermal.x10 -o thermal.exe
 
 .PHONY: thermalPar
 thermalPar: thermalPar.class
@@ -32,7 +34,7 @@ runPar_large: thermalPar.exe
 	./thermalPar.exe input_large100.txt 100 false
 
 thermalPar.exe: thermalPar.x10 $(HELPERS)
-	x10c++ -v -t -optimize -O -NO_CHECKS thermalPar.x10 -o thermalPar.exe
+	x10c++ thermalPar.x10 -o thermalPar.exe
 
 .PHONY: run
 run: runSeq runPar
