@@ -1,6 +1,6 @@
 import x10.util.Timer;
 
-public class thermal
+public class thermalPar
 {
 	/**
 	 * The command-line arguments to thermal are as follows:
