@@ -91,20 +91,22 @@ public class thermalPar
 							x_size:Int, y_size:Int, z_size:Int)
 	{
 		var zcount:Int = 0;
-		val xlen = x_size / 3;
-		finish for (x in 0..2) async {
-			for (y in 0..2) async {
-				for (z in 0..2) async {
+		val numDiv = 2;
+		val oneless = numDiv - 1;
+		val xlen = x_size / numDiv;
+		val ylen = y_size / numDiv;
+		val zlen = z_size / numDiv;
+		finish for (x in 0..oneless) async {
+			for (y in 0..oneless) async {
+				for (z in 0..oneless) async {
 					val xstart = x * xlen + 1;
-					val xend = (x == 2)?x_size:xstart + xlen - 1;
+					val xend = (x == oneless)?x_size:xstart + xlen - 1;
 					for (i in xstart..xend) {
-						val ylen = y_size / 3;
 						val ystart = y * xlen + 1;
-						val yend = (y == 2)?y_size:ystart + ylen - 1;
+						val yend = (y == oneless)?y_size:ystart + ylen - 1;
 						for (j in ystart..yend) {
-							val zlen = z_size / 3;
 							val zstart = z * zlen + 1;
-							val zend = (z == 2)?z_size:zstart + zlen - 1;
+							val zend = (z == oneless)?z_size:zstart + zlen - 1;
 							for (k in zstart..zend) {
 								//do math with A1 pixels, write to A2
 								A2(i,j,k) =	(A1(i+1, j, k) +
