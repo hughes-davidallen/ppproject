@@ -8,7 +8,7 @@ public class thermalPar
 	 *         to read the input to the program
 	 * args(1) is an integer and represents the number of iterations for
 	 *         which to run the program
-	 * args(2) is either 'true' or 'false' and signifies whether the
+	 * args(2) is either 'true' or 'false' and signifies whether to print
 	 *         intermediate results of the computation
 	 */
 	public static def main(args:Array[String](1)):void
