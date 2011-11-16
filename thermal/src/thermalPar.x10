@@ -90,19 +90,31 @@ public class thermalPar
 	public static def calc(A1:Array[Double](3), A2:Array[Double](3),
 							x_size:Int, y_size:Int, z_size:Int)
 	{
-		for(i in 1..x_size)
-		{
-			for(j in 1..y_size)
-			{
-				for(k in 1..z_size)
-				{
-					//do math with A1 pixels, write to A2
-					A2(i,j,k) =	(A1(i+1, j, k) +
-								A1(i-1, j, k) +
-								A1(i, j+1, k) +
-								A1(i, j-1, k) +
-								A1(i, j, k+1) +
-							 	A1(i, j, k-1)) / 6;
+		val xlen = x_size / 3;
+		finish for (x in 0..2) async {
+			val xstart = x * xlen + 1;
+			val xend = (x == 2)?x_size:xstart + xlen - 1;
+			for (i in xstart..xend) {
+				val ylen = y_size / 3;
+				for (y in 0..2) async {
+					val ystart = y * xlen + 1;
+					val yend = (y == 2)?y_size:ystart + ylen - 1;
+					for (j in ystart..yend) {
+						val zlen = z_size / 3;
+						for (z in 0..2) async {
+							val zstart = z * zlen + 1;
+							val zend = (z == 2)?z_size:zstart + zlen - 1;
+							for (k in zstart..zend) {
+								//do math with A1 pixels, write to A2
+								A2(i,j,k) =	(A1(i+1, j, k) +
+											A1(i-1, j, k) +
+											A1(i, j+1, k) +
+											A1(i, j-1, k) +
+											A1(i, j, k+1) +
+										 	A1(i, j, k-1)) / 6;
+							}
+						}
+					}
 				}
 			}
 		}
