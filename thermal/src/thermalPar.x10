@@ -19,6 +19,7 @@ public class thermalPar
 		val source = InputParser.parse(args(0));
 		val iterations = Int.parse(args(1));
 		val verbose = Boolean.parse(args(2));
+		val divs = Int.parse(args(3));
 
 		//get dimensions of source array
 		val source_reg:Region = source.region;
@@ -60,9 +61,9 @@ public class thermalPar
 			//do cell averaging
 			val even = (i % 2 == 0);
 			if (even)
-				calc(A, B, x_source_size, y_source_size, z_source_size);
+				calc(A, B, divs, x_source_size, y_source_size, z_source_size);
 			else
-				calc(B, A, x_source_size, y_source_size, z_source_size);
+				calc(B, A, divs, x_source_size, y_source_size, z_source_size);
 		
 			if (verbose) {
 				//Print intermediate data to the Console
@@ -90,10 +91,10 @@ public class thermalPar
 	 * not the outer array.
 	 */
 	public static def calc(A1:Array[Double](3), A2:Array[Double](3),
-							x_size:Int, y_size:Int, z_size:Int)
+							divs:Int, x_size:Int, y_size:Int, z_size:Int)
 	{
 		var zcount:Int = 0;
-		val numDiv = 2;
+		val numDiv = divs;
 		val oneless = numDiv - 1;
 		val xlen = x_size / numDiv;
 		val ylen = y_size / numDiv;
