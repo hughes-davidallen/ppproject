@@ -34,7 +34,7 @@ runPar_large: thermalPar.exe
 	./thermalPar.exe input_large100.txt 100 false
 
 thermalPar.exe: thermalPar.x10 $(HELPERS)
-	x10c++ thermalPar.x10 -o thermalPar.exe
+	x10c++ thermalPar.x10 $(CPPFLAGS) -o thermalPar.exe
 
 .PHONY: run
 run: runSeq runPar
