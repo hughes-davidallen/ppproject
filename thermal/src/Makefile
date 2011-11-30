@@ -43,7 +43,7 @@ run: runSeq runPar
 run_large: runSeq_large runPar_large
 
 .PHONY: compare
-compare: run_large
+compare: run
 	diff output.txt outputPar.txt
 
 .PHONY: clean

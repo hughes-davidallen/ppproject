@@ -91,7 +91,9 @@ public class thermalPar
 							x_size:Int, y_size:Int, z_size:Int)
 	{
 		var zcount:Int = 0;
-		val numDiv = 2;
+		val numDiv = (x_size - 1) / 25 + 1;
+		Console.OUT.println("NumDiv = " + numDiv);
+		Console.OUT.flush();
 		val oneless = numDiv - 1;
 		val xlen = x_size / numDiv;
 		val ylen = y_size / numDiv;
