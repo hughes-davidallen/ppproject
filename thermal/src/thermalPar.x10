@@ -48,6 +48,10 @@ public class thermalPar
 		/* START TIMING */
 		val starttime = Timer.milliTime();
 
+		val x_divs = (x_source_size - 1) / 25 + 1;
+		val y_divs = (y_source_size - 1) / 25 + 1;
+		val z_divs = (z_source_size - 1) / 25 + 1;
+
 		//do loop with calculations, alternating working arrays read/write
 		for (i in 1..iterations)
 		{
@@ -58,9 +62,9 @@ public class thermalPar
 			//do cell averaging
 			val even = (i % 2 == 0);
 			if (even)
-				calc(A, B, x_source_size, y_source_size, z_source_size);
+				calc(A, B, x_source_size, y_source_size, z_source_size, x_divs, y_divs, z_divs);
 			else
-				calc(B, A, x_source_size, y_source_size, z_source_size);
+				calc(B, A, x_source_size, y_source_size, z_source_size, x_divs, y_divs, z_divs);
 		
 			if (verbose) {
 				//Print intermediate data to the Console
@@ -88,27 +92,24 @@ public class thermalPar
 	 * not the outer array.
 	 */
 	public static def calc(A1:Array[Double](3), A2:Array[Double](3),
-							x_size:Int, y_size:Int, z_size:Int)
+							x_size:Int, y_size:Int, z_size:Int,
+							x_divs:Int, y_divs:Int, z_divs:Int)
 	{
 		var zcount:Int = 0;
-		val numDiv = (x_size - 1) / 25 + 1;
-		Console.OUT.println("NumDiv = " + numDiv);
-		Console.OUT.flush();
-		val oneless = numDiv - 1;
-		val xlen = x_size / numDiv;
-		val ylen = y_size / numDiv;
-		val zlen = z_size / numDiv;
-		finish for (x in 0..oneless) async {
-			for (y in 0..oneless) async {
-				for (z in 0..oneless) async {
+		val xlen = x_size / x_divs;
+		val ylen = y_size / y_divs;
+		val zlen = z_size / z_divs;
+		finish for (x in 0..(x_divs - 1)) async {
+			for (y in 0..(y_divs - 1)) async {
+				for (z in 0..(z_divs - 1)) async {
 					val xstart = x * xlen + 1;
-					val xend = (x == oneless)?x_size:xstart + xlen - 1;
+					val xend = (x == (x_divs - 1))?x_size:xstart + xlen - 1;
 					for (i in xstart..xend) {
 						val ystart = y * xlen + 1;
-						val yend = (y == oneless)?y_size:ystart + ylen - 1;
+						val yend = (y == (y_divs - 1))?y_size:ystart + ylen - 1;
 						for (j in ystart..yend) {
 							val zstart = z * zlen + 1;
-							val zend = (z == oneless)?z_size:zstart + zlen - 1;
+							val zend = (z == (z_divs - 1))?z_size:zstart + zlen - 1;
 							for (k in zstart..zend) {
 								//do math with A1 pixels, write to A2
 								A2(i,j,k) =	(A1(i+1, j, k) +
