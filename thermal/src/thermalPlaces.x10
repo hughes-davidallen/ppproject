@@ -2,6 +2,10 @@ import x10.util.Timer;
 
 public class thermalPlaces
 {
+	private val source:Array[Double](3);
+	private val iterations:Int;
+	private val verbose:Boolean;
+
 	/**
 	 * The command-line arguments to thermal are as follows:
 	 * args(0) is a string and represents the name of the file from which
@@ -13,11 +17,23 @@ public class thermalPlaces
 	 */
 	public static def main(args:Array[String](1)):void
 	{
-		//get source array from file
-		val source = InputParser.parse(args(0));
-		val iterations = Int.parse(args(1));
-		val verbose = Boolean.parse(args(2));
+		val s = InputParser.parse(args(0));
+		val i = Int.parse(args(1));
+		val v = Boolean.parse(args(2));
 
+		val places = new thermalPlaces(s, i, v);
+		places.run();
+	}
+
+	public def this(s:Array[Double](3), i:Int, v:Boolean)
+	{
+		source = s;
+		iterations = i;
+		verbose = v;
+	}
+
+	public def run():void
+	{
 		//get dimensions of source array
 		val source_reg:Region = source.region;
 		val x_source_size:Int = source_reg.max(0);
@@ -45,6 +61,12 @@ public class thermalPlaces
 			}
 		}
 
+		singlePlace(A, B, x_source_size, y_source_size, z_source_size);
+	}
+
+	private def singlePlace(A:Array[Double](3), B:Array[Double](3),
+					x_source_size:Int, y_source_size:Int, z_source_size:Int)
+	{
 		/* START TIMING */
 		val starttime = Timer.milliTime();
 
@@ -81,8 +103,9 @@ public class thermalPlaces
 		//DONE
 		Console.OUT.println("DONE in " + stoptime + " milliseconds");
 		//Print final results to output file
-		OutputPrinter.printm("outputPar.txt", A);
+		OutputPrinter.printm("outputPlaces.txt", A);
 	}
+	
 
 	/**
 	 * Looks at each cell in the array and determines the next value for
@@ -91,7 +114,7 @@ public class thermalPlaces
 	 * The last three arguments refer to the size of the interior array,
 	 * not the outer array.
 	 */
-	public static def calc(A1:Array[Double](3), A2:Array[Double](3),
+	private def calc(A1:Array[Double](3), A2:Array[Double](3),
 							x_size:Int, y_size:Int, z_size:Int,
 							x_divs:Int, y_divs:Int, z_divs:Int)
 	{
@@ -133,7 +156,7 @@ public class thermalPlaces
 	 * The last three arguments to this method refer to the size of the
 	 * interior array, not the outer array.
 	 */
-	public static def borderFill(A:Array[Double](3), x_max:Int, y_max:Int,
+	private def borderFill(A:Array[Double](3), x_max:Int, y_max:Int,
 									z_max:Int)
 	{
 		finish {
