@@ -5,6 +5,8 @@ public class thermalPlaces
 	private val source:Array[Double](3);
 	private val iterations:Int;
 	private val verbose:Boolean;
+	private var A:Array[Double](3);
+	private var B:Array[Double](3);
 
 	/**
 	 * The command-line arguments to thermal are as follows:
@@ -20,7 +22,6 @@ public class thermalPlaces
 		val s = InputParser.parse(args(0));
 		val i = Int.parse(args(1));
 		val v = Boolean.parse(args(2));
-
 		val places = new thermalPlaces(s, i, v);
 		places.run();
 	}
@@ -40,28 +41,31 @@ public class thermalPlaces
 		val y_source_size:Int = source_reg.max(1);
 		val z_source_size:Int = source_reg.max(2);
 
+		val numPlaces = Place.numPlaces();
+
 		//create new, larger region for border data
 		val work_reg:Region = ((0..(x_source_size + 1))
 			* (0..(y_source_size + 1)) * (0..(z_source_size+1)));
 
 		//create working arrays
-		var A:Array[Double](3) = new Array[Double](work_reg, 0.0);
-		var B:Array[Double](3) = new Array[Double](work_reg, 0.0);
+		A = new Array[Double](work_reg, 0.0);
+		B = new Array[Double](work_reg, 0.0);
 
-		//copy source into working arrays
-		for(i in 1..x_source_size)
-		{
-			for(j in 1..y_source_size)
-			{
-				for(k in 1..z_source_size)
-				{
+		fillPlaceArray(1, x_source_size, 1, y_source_size, 1, z_source_size);
+
+		singlePlace(A, B, x_source_size, y_source_size, z_source_size);
+	}
+
+	private def fillPlaceArray(xstart:Int, xstop:Int, ystart:Int, ystop:Int, zstart:Int, zstop:Int):void
+	{
+		for (i in xstart..xstop) {
+			for (j in ystart..ystop) {
+				for (k in zstart..zstop) {
 					A(i,j,k) = source(i,j,k);
 					B(i,j,k) = source(i,j,k);
 				}
 			}
 		}
-
-		singlePlace(A, B, x_source_size, y_source_size, z_source_size);
 	}
 
 	private def singlePlace(A:Array[Double](3), B:Array[Double](3),
