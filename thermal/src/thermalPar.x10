@@ -55,17 +55,16 @@ public class thermalPar
 		//do loop with calculations, alternating working arrays read/write
 		for (i in 1..iterations)
 		{
-			//fill in border data
-			borderFill(A, x_source_size, y_source_size, z_source_size);
-			borderFill(B, x_source_size, y_source_size, z_source_size);
-
 			//do cell averaging
 			val even = (i % 2 == 0);
-			if (even)
+			if (even) {
+				borderFill(A, x_source_size, y_source_size, z_source_size);
 				calc(A, B, x_source_size, y_source_size, z_source_size, x_divs, y_divs, z_divs);
-			else
+			} else {
+				borderFill(B, x_source_size, y_source_size, z_source_size);
 				calc(B, A, x_source_size, y_source_size, z_source_size, x_divs, y_divs, z_divs);
-		
+			}		
+
 			if (verbose) {
 				//Print intermediate data to the Console
 				//This should not be used in performance tests

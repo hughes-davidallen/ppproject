@@ -1,20 +1,55 @@
 import x10.util.Timer;
 
-public class thermalPlaces
+public class thermalPlaces2
 {
+
+private static def partitionData(x_size:Int, y_size:Int, z_size:Int, numDivs:Int, div:Int):Array[Double](3)
+{
+	var reg:Region(3);
+//	if (x_size > y_size) {
+//		if (x_size > z_size) {
+			//X is longest
+			if (div == 0) {
+				reg = 0..(x_size / 2 + 1)*0..(y_size + 1)*0..(z_size + 1);
+			} else {
+				reg = (x_size / 2 - 1)..(x_size + 1)*0..(y_size + 1)*0..(z_size + 1);
+			}
+			return new Array[Double](reg, 0.0);
+//		}
+//	} else if (y_size > z_size) {
+		// y is longest
+//	}
+	//z is longest
+}
+
+private static def findRegion(x_size:Int, y_size:Int, z_size:Int, numDivs:Int, div:Int):Region(3)
+{
+	if (div == 0) {
+		return 0..(x_size / 2 + 1)*0..(y_size + 1)*0..(z_size + 1);
+	} else {
+		return (x_size / 2 - 1)..(x_size + 1)*0..(y_size + 1)*0..(z_size + 1);
+	}
+}
 
 public static def main(args:Array[String](1)):void
 {
-	val iterations = 10;
-	val num_subDivs = 8;
-	val sub_reg = (0..x)*(0..y)*(0..z)
-	val subdivs:Array[Array[Array[Double](3)](1) = new Array[Array[Double](3)](1)(sub_reg,init);
+	val source = InputParser.parse(args(0));
+	val iterations = Int.parse(args(1));
+	val num_subDivs = 2;
 
-	val subDiv_out = PlaceLocalHandle.make[Array[Double](3)](Dist.makeUnique(PlaceGroup.WORLD),
-    			()=>new Array[Double](3)(***reg, 0.0)));	
+	val input_reg = source.region;
+	val x_size = input_reg.max(0);
+	val y_size = input_reg.max(1);
+	val z_size = input_reg.max(2);
 
-	val shadow = PlaceLocalHandle.make[Rail[Array[Double](2)]](Dist.makeUnique(PlaceGroup.WORLD),
-    			()=>new Rail[Array[Double](2)](num_subDivs, new Array[Double](***reg, 0.0)));
+	val sub_reg = (0..x_size)*(0..y_size)*(0..z_size);
+
+	val subdivs:Array[Array[Double](3)](1) = new Array[Array[Double](3)](8, (i:Int)=>new Array[Double](findRegion(x_size, y_size, z_size, num_subDivs, i, 0.0)));
+
+	val subDiv_out = PlaceLocalHandle.make[Array[Double](3)](Dist.makeUnique(PlaceGroup.WORLD), (i:Int)=>partitionData(x_size, y_size, z_size, num_subDivs, i));
+
+//	val shadow = PlaceLocalHandle.make[Rail[Array[Double](2)]](Dist.makeUnique(PlaceGroup.WORLD),
+//  			()=>new Rail[Array[Double](2)](num_subDivs, new Array[Double](***reg, 0.0)));
 
 	val outputArray= GlobalRef[Array[Double](3)](new Array[Double](input_reg,0.0));
 
@@ -22,7 +57,7 @@ public static def main(args:Array[String](1)):void
 	clocked finish for (i in 0..(num_subDivs-1))
 	{
 		//assign subdivisions to places with asyncs, limit to numplaces
-		clocked async at(Place.place(i%numPlaces))
+		clocked async at(Place.place(i % numPlaces))
 		{
 			//create working arrays
 			var A:Array[Double](3) = new Array[Double](sub_reg, 0.0);
@@ -60,7 +95,7 @@ public static def main(args:Array[String](1)):void
 						subDiv_out() = A;
 				} else {
 					borderFillFromShadow(B, x_max_sub, y_max_sub, z_max_sub, shadow, neighbors);
-					calc(B,A, x_max_sub, y_max_sub, z_max_sub, x_divs, y_divs, z_divs);
+					calc(B, A, x_max_sub, y_max_sub, z_max_sub, x_divs, y_divs, z_divs);
 					
 					//if last iteration
 					if(j == (iterations))
@@ -74,9 +109,11 @@ public static def main(args:Array[String](1)):void
 	for(i in 0..num_subDivs)
 	{
 		//basically invert process that did subdivisions
-		at(Place.place(i%numPlaces)) 
+		at(Place.place(i % numPlaces)) 
 		{
-			outputArray(*) = subDiv_out();
+			//Do this better
+			for ([i,j,k] in subDiv_out())
+				outputArray(i, j, k) = subDiv_out(i, j, k);
 		}
 	}
 
@@ -99,40 +136,27 @@ public static def computeNeighbors(i:Int, neighbors:Rail[Boolean], x_divs:Int, y
 	 * 3: Back
 	 */
 
-
-	//checking if along right side of cube
-	if((i%x_divs) == x_divs-1)
-	{
+	//checking if along right and left sides of cube
+	val xpos = i % x_divs;
+	if(xpos == x_divs-1) {
 		neighbors(5) = false;
-	}
-
-	//checking if along left side of cube
-	if((i%x_divs) == 0)
-	{
+	} else if((i%x_divs) == 0) {
 		neighbors(4) = false;
 	}
 
-	//checking if along top side of cube
-	if(((i/y_divs) % y_divs) == y_divs-1)
-	{
+	//checking if along top and bottom sides of cube
+	val ypos = (i / y_divs) % y_divs;
+	if(ypos == y_divs-1) {
 		neighbors(0) = false;
-	}
-
-	//checking if along bottom side of cube
-	if(((i/y_divs) % y_divs) == 0)
-	{
+	} else if (ypos == 0) {
 		neighbors(1) = false;
 	}
 
-	//checking if along back side of cube
-	if((((i/y_divs) / z_divs) % z_divs) == z_divs-1)
-	{
+	//checking if along back and front sides of cube
+	val zpos = ((i / y_divs) / z_divs) % z_divs;
+	if(zpos == z_divs-1) {
 		neighbors(3) = false;
-	}
-
-	//checking if along front side of cube
-	if((((i/y_divs) / z_divs)  % z_divs) == 0)
-	{
+	} else if (zpos == 0) {
 		neighbors(2) = false;
 	}
 }

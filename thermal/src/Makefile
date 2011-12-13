@@ -34,12 +34,12 @@ runPar: thermalPar
 runPlaces: thermalPlaces
 	x10 $< input.txt 7 false
 
-run: runSeq runPlaces
+run: runSeq runPar
 
 run_large: runSeq_large runPlaces_large
 
 compare: run
-	diff output.txt outputPlaces.txt
+	diff output.txt outputPar.txt
 
 clean:
 	rm -f *.class *.java *.cc *.h *.exe

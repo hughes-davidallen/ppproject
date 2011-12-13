@@ -14,5 +14,20 @@ public class test {
 			}
 			Console.OUT.println();
 		}
+		val plh = PlaceLocalHandle.make[Rail[Int]](Dist.makeUnique(PlaceGroup.WORLD), ()=>new Rail[Int](4, 0));
+
+		for (p in Place.places()) async at (p) {
+			plh()(p.id) = p.id;
+		}
+
+		for (i in 0..3) {
+			Console.OUT.println("Local: " + plh()(i));
+		}
+
+		for (p in Place.places()) {
+			at (p) for (i in 0..3) {
+				Console.OUT.println("At place " + p.id + ": " + plh()(i));
+			}
+		}
 	}
 }

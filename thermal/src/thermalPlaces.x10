@@ -5,8 +5,8 @@ public class thermalPlaces
 	private val source:Array[Double](3);
 	private val iterations:Int;
 	private val verbose:Boolean;
-	private var A:Array[Double](3);
-	private var B:Array[Double](3);
+	private var A:Array[Array[Double](3)];
+	private var B:Array[Array[Double](3)];
 
 	/**
 	 * The command-line arguments to thermal are as follows:
@@ -48,12 +48,12 @@ public class thermalPlaces
 			* (0..(y_source_size + 1)) * (0..(z_source_size+1)));
 
 		//create working arrays
-		A = new Array[Double](work_reg, 0.0);
-		B = new Array[Double](work_reg, 0.0);
+		A = new Array[Array[Double](3)](numPlaces, new Array[Double](work_reg, 0.0));
+		B = new Array[Array[Double](3)](numPlaces, new Array[Double](work_reg, 0.0));
 
 		fillPlaceArray(1, x_source_size, 1, y_source_size, 1, z_source_size);
 
-		singlePlace(A, B, x_source_size, y_source_size, z_source_size);
+		singlePlace(A(here.id), B(here.id), x_source_size, y_source_size, z_source_size);
 	}
 
 	private def fillPlaceArray(xstart:Int, xstop:Int, ystart:Int, ystop:Int, zstart:Int, zstop:Int):void
@@ -61,8 +61,8 @@ public class thermalPlaces
 		for (i in xstart..xstop) {
 			for (j in ystart..ystop) {
 				for (k in zstart..zstop) {
-					A(i,j,k) = source(i,j,k);
-					B(i,j,k) = source(i,j,k);
+					A(here.id)(i,j,k) = source(i,j,k);
+					B(here.id)(i,j,k) = source(i,j,k);
 				}
 			}
 		}
