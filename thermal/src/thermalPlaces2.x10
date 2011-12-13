@@ -67,16 +67,27 @@ public static def main(args:Array[String](1)):void
 	}
 
 	val subdivs:Array[Array[Double](3)](1) = new Array[Array[Double](3)](num_subDivs);
-	for (i in 0..(num_subDivs - 1)) {
-		subdivs(i) = new Array[Double](regions(i), 0.0);
+	for (n in 0..(num_subDivs - 1)) {
+		subdivs(n) = new Array[Double](regions(n));
+		val x_min = regions(n).min(0) + 1;
+		val x_max = regions(n).max(0) - 1;
+		val y_min = regions(n).min(1) + 1;
+		val y_max = regions(n).max(1) - 1;
+		val z_min = regions(n).min(2) + 1;
+		val z_max = regions(n).max(2) - 1;
+
+		for (i in x_min..x_max)
+			for (j in y_min..y_max)
+				for(k in z_min..z_max)
+					subdivs(n)(i, j, k) = source(i, j, k);
 	}
 
-	val subDiv_out = PlaceLocalHandle.make[Array[Double](3)](Dist.makeUnique(PlaceGroup.WORLD), null);
-	val shadow = PlaceLocalHandle.make[Rail[Array[Double](2)]](Dist.makeUnique(PlaceGroup.WORLD), null);
+	val subDiv_out = PlaceLocalHandle.make[Rail[Array[Double](3)]](Dist.makeUnique(PlaceGroup.WORLD), ()=>new Rail[Array[Double](3)](1));
+	val shadow = PlaceLocalHandle.make[Rail[Rail[Array[Double](2)]]](Dist.makeUnique(PlaceGroup.WORLD), ()=>new Rail[Rail[Array[Double](2)]](1));
 	for (p in Place.places()) {
 		at (p) {
-			shadow() = extractRegions(regions(p.id));
-			subDiv_out() = new Array[Double](regions(p.id), 0.0);
+			shadow()(0) = extractRegions(regions(p.id));
+			subDiv_out()(0) = new Array[Double](regions(p.id), 0.0);
 		}
 	}
 
@@ -110,9 +121,9 @@ public static def main(args:Array[String](1)):void
 				// copy out borders to shadow array, pick correct array
 				val even = (i % 2 == 0);  //*** could maybe make this a function based on even/odd
 				if (even)
-					borderFillToShadow(B, shadow(), neighbors);
+					borderFillToShadow(B, shadow()(0), neighbors);
 				else
-					borderFillToShadow(A, shadow(), neighbors);
+					borderFillToShadow(A, shadow()(0), neighbors);
 				
 				// blocking clock
 				Clock.advanceAll();
@@ -123,29 +134,40 @@ public static def main(args:Array[String](1)):void
 					calc(A, B, x_divs, y_divs, z_divs);
 					
 					//if last iteration
-					if(j == (iterations))
-						subDiv_out() = A;
+					if (j == (iterations))
+						subDiv_out()(0) = A;
 				} else {
 					borderFillFromShadow(B, shadow, neighbors, x_divs, y_divs, z_divs);
 					calc(B, A, x_divs, y_divs, z_divs);
 					
 					//if last iteration
-					if(j == (iterations))
-						subDiv_out() = B;
+					if (j == (iterations))
+						subDiv_out()(0) = B;
 				}
 			}
 		}
 	}
 
 	// copy each subdiv into output array
-	for(n in 0..num_subDivs) //iterate with n to avoid name conflict
+	for (n in 0..(num_subDivs - 1)) //iterate with n to avoid name conflict
 	{
 		//basically invert process that did subdivisions
-		at(Place.place(n % numPlaces)) 
+		at (Place.place(n % numPlaces)) 
 		{
-			//Do this better
-			for ([i,j,k] in subDiv_out())
-				outputArray(i, j, k) = subDiv_out()(i, j, k);
+			val R = subDiv_out()(0).region;
+			val x_min = R.min(0) + 1;
+			val x_max = R.max(0) - 1;
+			val y_min = R.min(1) + 1;
+			val y_max = R.max(1) - 1;
+			val z_min = R.min(2) + 1;
+			val z_max = R.max(2) - 1;
+
+			for (i in x_min..x_max)
+				for (j in y_min..y_max)
+					for (k in z_min..z_max)
+						outputArray()(i, j, k) = subDiv_out()(0)(i, j, k);
+			Console.OUT.println(outputArray()(2, 2, 2));
+			Console.OUT.println(subDiv_out()(0)(2, 2, 2));
 		}
 	}
 
@@ -155,7 +177,7 @@ public static def main(args:Array[String](1)):void
 	//DONE
 	Console.OUT.println("DONE in " + stoptime + " milliseconds");
 	//Print final results to output file
-	OutputPrinter.printm("outputPar.txt", outputArray());
+	OutputPrinter.printm("outputPlaces.txt", outputArray());
 }
 
 public static def computeNeighbors(i:Int, neighbors:Rail[Boolean], x_divs:Int, y_divs:Int, z_divs:Int)
@@ -247,7 +269,7 @@ public static def borderFillToShadow(A:Array[Double](3), shadow:Rail[Array[Doubl
 
 //depending on how shadow is implemented, this will need to be tweaked to
 //make sure we're reading from the correct places
-public static def borderFillFromShadow(A:Array[Double](3), shadow:PlaceLocalHandle[Rail[Array[Double](2)]], neighbors:Rail[Boolean], x_divs:Int, y_divs:Int, z_divs:Int)
+public static def borderFillFromShadow(A:Array[Double](3), shadow:PlaceLocalHandle[Rail[Rail[Array[Double](2)]]], neighbors:Rail[Boolean], x_divs:Int, y_divs:Int, z_divs:Int)
 {
 	val reg = A.region;
 	val x_min = reg.min(0);
@@ -260,36 +282,36 @@ public static def borderFillFromShadow(A:Array[Double](3), shadow:PlaceLocalHand
 	if (neighbors(TOP)) at (here.next(x_divs)) {
 		for (i in x_min..x_max)
 			for (k in z_min..z_max)
-				A(i, y_max, k) = shadow()(BOTTOM)(i, k);
+				A(i, y_max, k) = shadow()(0)(BOTTOM)(i, k);
 	}
 
 	if (neighbors(BOTTOM)) at (here.prev(x_divs)) {
 		for (i in x_min..x_max)
 			for (k in z_min..z_max)
-				A(i, y_min, k) = shadow()(TOP)(i, k);
+				A(i, y_min, k) = shadow()(0)(TOP)(i, k);
 	}
 
 	if (neighbors(FRONT)) at (here.prev(x_divs * y_divs)) {
 		for (i in x_min..x_max)
 			for (j in z_min..z_max)
-				A(i, j, z_min) = shadow()(BACK)(i, j);
+				A(i, j, z_min) = shadow()(0)(BACK)(i, j);
 	}
 	if (neighbors(BACK)) at (here.next(x_divs * y_divs)) {
 		for (i in x_min..x_max)
 			for (j in z_min..z_max)
-				A(i, j, z_max) = shadow()(FRONT)(i, j);
+				A(i, j, z_max) = shadow()(0)(FRONT)(i, j);
 	}
 
 	if (neighbors(LEFT)) at (here.prev()) {
 		for (j in y_min..y_max)
 			for (k in z_min..z_max)
-				A(x_min, j, k) = shadow()(RIGHT)(j, k);
+				A(x_min, j, k) = shadow()(0)(RIGHT)(j, k);
 	}
 
 	if (neighbors(RIGHT)) at (here.next()) {
 		for (j in y_min..y_max)
 			for (k in z_min..z_max)
-				A(x_max, j, k) = shadow()(LEFT)(j, k);
+				A(x_max, j, k) = shadow()(0)(LEFT)(j, k);
 	}
 }
 
@@ -298,16 +320,16 @@ public static def calc(A1:Array[Double](3), A2:Array[Double](3), x_divs:Int, y_d
 {
 /* PLEASE CHECK FENCE POSTS */
 	val reg = A1.region;
-	val x_min = reg.min(0);
-	val x_max = reg.max(0);
-	val y_min = reg.min(1);
-	val y_max = reg.max(1);
-	val z_min = reg.min(2);
-	val z_max = reg.max(2);
+	val x_min = reg.min(0) + 1;
+	val x_max = reg.max(0) - 1;
+	val y_min = reg.min(1) + 1;
+	val y_max = reg.max(1) - 1;
+	val z_min = reg.min(2) + 1;
+	val z_max = reg.max(2) - 1;
 
-	val x_size = x_max - x_min;
-	val y_size = y_max - y_min;
-	val z_size = z_max - z_min;
+	val x_size = x_max - x_min + 1;
+	val y_size = y_max - y_min + 1;
+	val z_size = z_max - z_min + 1;
 
 	val xlen = x_size / x_divs;
 	val ylen = y_size / y_divs;
@@ -315,13 +337,13 @@ public static def calc(A1:Array[Double](3), A2:Array[Double](3), x_divs:Int, y_d
 	finish for (x in 0..(x_divs - 1)) async {
 		for (y in 0..(y_divs - 1)) async {
 			for (z in 0..(z_divs - 1)) async {
-				val xstart = x * xlen + 1 + x_min;
+				val xstart = x * xlen + x_min;
 				val xend = (x == (x_divs - 1))?x_max:xstart + xlen - 1;
 				for (i in xstart..xend) {
-					val ystart = y * xlen + 1 + y_min;
+					val ystart = y * ylen + y_min;
 					val yend = (y == (y_divs - 1))?y_max:ystart + ylen - 1;
 					for (j in ystart..yend) {
-						val zstart = z * zlen + 1 + z_min;
+						val zstart = z * zlen + z_min;
 						val zend = (z == (z_divs - 1))?z_max:zstart + zlen - 1;
 						for (k in zstart..zend) {
 							//do math with A1 pixels, write to A2
