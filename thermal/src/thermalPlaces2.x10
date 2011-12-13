@@ -2,33 +2,41 @@ import x10.util.Timer;
 
 public class thermalPlaces2
 {
-
-private static def partitionData(x_size:Int, y_size:Int, z_size:Int, numDivs:Int, div:Int):Array[Double](3)
-{
-	var reg:Region(3);
-//	if (x_size > y_size) {
-//		if (x_size > z_size) {
-			//X is longest
-			if (div == 0) {
-				reg = 0..(x_size / 2 + 1)*0..(y_size + 1)*0..(z_size + 1);
-			} else {
-				reg = (x_size / 2 - 1)..(x_size + 1)*0..(y_size + 1)*0..(z_size + 1);
-			}
-			return new Array[Double](reg, 0.0);
-//		}
-//	} else if (y_size > z_size) {
-		// y is longest
-//	}
-	//z is longest
-}
+	static val TOP = 0;
+	static val BOTTOM = 1;
+	static val FRONT = 2;
+	static val BACK = 3;
+	static val LEFT = 4;
+	static val RIGHT = 5;
 
 private static def findRegion(x_size:Int, y_size:Int, z_size:Int, numDivs:Int, div:Int):Region(3)
 {
+	//needs more variety
 	if (div == 0) {
 		return 0..(x_size / 2 + 1)*0..(y_size + 1)*0..(z_size + 1);
 	} else {
 		return (x_size / 2 - 1)..(x_size + 1)*0..(y_size + 1)*0..(z_size + 1);
 	}
+}
+
+private static def extractRegions(reg:Region(3)):Rail[Array[Double](2)]
+{
+	val shadows = new Rail[Array[Double](2)](6);
+	val xx = reg.max(0);
+	val yx = reg.max(1);
+	val zx = reg.max(2);
+	val xn = reg.min(0);
+	val yn = reg.min(1);
+	val zn = reg.min(2);
+
+	shadows(TOP) = new Array[Double](xn..xx*zn..zx, 0.0);
+	shadows(BOTTOM) = new Array[Double](xn..xx*zn..zx, 0.0);
+	shadows(FRONT) = new Array[Double](xn..xx*yn..yx, 0.0);
+	shadows(BACK) = new Array[Double](xn..xx*yn..yx, 0.0);
+	shadows(LEFT) = new Array[Double](yn..yx*zn..zx, 0.0);
+	shadows(RIGHT) = new Array[Double](yn..yx*zn..zx, 0.0);
+
+	return shadows;
 }
 
 public static def main(args:Array[String](1)):void
@@ -44,14 +52,26 @@ public static def main(args:Array[String](1)):void
 
 	val sub_reg = (0..x_size)*(0..y_size)*(0..z_size);
 
-	val subdivs:Array[Array[Double](3)](1) = new Array[Array[Double](3)](8, (i:Int)=>new Array[Double](findRegion(x_size, y_size, z_size, num_subDivs, i, 0.0)));
+	val regions = new Rail[Region](num_subDivs);
+	for (i in 0..(num_subDivs - 1)) {
+		regions(i) = findRegion(x_size, y_size, z_size, num_subDivs, i);
+	}
 
-	val subDiv_out = PlaceLocalHandle.make[Array[Double](3)](Dist.makeUnique(PlaceGroup.WORLD), (i:Int)=>partitionData(x_size, y_size, z_size, num_subDivs, i));
+	val subdivs:Array[Array[Double](3)](1) = new Array[Array[Double](3)](num_subDivs);
+	for (i in 0..(num_subDivs - 1)) {
+		subdivs(i) = new Array[Double](regions(i), 0.0);
+	}
 
-//	val shadow = PlaceLocalHandle.make[Rail[Array[Double](2)]](Dist.makeUnique(PlaceGroup.WORLD),
-//  			()=>new Rail[Array[Double](2)](num_subDivs, new Array[Double](***reg, 0.0)));
+	val subDiv_out = PlaceLocalHandle.make[Array[Double](3)](Dist.makeUnique(PlaceGroup.WORLD), null);
+	val shadow = PlaceLocalHandle.make[Rail[Array[Double](2)]](Dist.makeUnique(PlaceGroup.WORLD), null);
+	for (p in Place.places()) {
+		at (p) {
+			shadow() = extractRegions(regions(p.id));
+			subDiv_out() = new Array[Double](regions(p.id), 0.0);
+		}
+	}
 
-	val outputArray= GlobalRef[Array[Double](3)](new Array[Double](input_reg,0.0));
+	val outputArray = GlobalRef[Array[Double](3)](new Array[Double](input_reg, 0.0));
 
 	//iterate over subdivisions
 	clocked finish for (i in 0..(num_subDivs-1))
@@ -139,25 +159,25 @@ public static def computeNeighbors(i:Int, neighbors:Rail[Boolean], x_divs:Int, y
 	//checking if along right and left sides of cube
 	val xpos = i % x_divs;
 	if(xpos == x_divs-1) {
-		neighbors(5) = false;
+		neighbors(RIGHT) = false;
 	} else if((i%x_divs) == 0) {
-		neighbors(4) = false;
+		neighbors(LEFT) = false;
 	}
 
 	//checking if along top and bottom sides of cube
 	val ypos = (i / y_divs) % y_divs;
 	if(ypos == y_divs-1) {
-		neighbors(0) = false;
+		neighbors(TOP) = false;
 	} else if (ypos == 0) {
-		neighbors(1) = false;
+		neighbors(BOTTOM) = false;
 	}
 
 	//checking if along back and front sides of cube
 	val zpos = ((i / y_divs) / z_divs) % z_divs;
 	if(zpos == z_divs-1) {
-		neighbors(3) = false;
+		neighbors(BACK) = false;
 	} else if (zpos == 0) {
-		neighbors(2) = false;
+		neighbors(FRONT) = false;
 	}
 }
 
