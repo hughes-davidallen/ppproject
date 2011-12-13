@@ -8,7 +8,7 @@ thermal: thermal.class
 
 thermalPar: thermalPar.class
 
-thermalPlaces: thermalPlaces.class
+thermalPlaces2: thermalPlaces2.class
 
 %.class: %.x10
 	x10c $<
@@ -19,27 +19,27 @@ runSeq_large: thermal.exe
 runPar_large: thermalPar.exe
 	salloc -n1 srun.x10sock ./$< input_large100.txt 100 false
 
-runPlaces_large: thermalPlaces.exe
-	salloc -n1 srun.x10sock ./$< input_large100.txt 100 false
+runPlaces_large: thermalPlaces2.exe
+	salloc -n2 srun.x10sock ./$< input_large100.txt 100
 
 %.exe: %.x10
 	x10c++ $(CPPFLAGS) $< -o $@
 
-run: thermal
+runSeq: thermal
 	x10 $< input.txt 7 false
 
 runPar: thermalPar
 	x10 $< input.txt 7 false
 
-runPlaces: thermalPlaces
-	x10 $< input.txt 7 false
+runPlaces: thermalPlaces2
+	x10 $< input.txt 7
 
-run: runSeq runPar
+run: runSeq runPlaces
 
 run_large: runSeq_large runPlaces_large
 
 compare: run
-	diff output.txt outputPar.txt
+	diff -y output.txt outputPlaces.txt
 
 clean:
 	rm -f *.class *.java *.cc *.h *.exe

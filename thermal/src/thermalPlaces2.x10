@@ -162,10 +162,14 @@ public static def main(args:Array[String](1)):void
 			val z_min = R.min(2) + 1;
 			val z_max = R.max(2) - 1;
 
-			for (i in x_min..x_max)
-				for (j in y_min..y_max)
-					for (k in z_min..z_max)
-						outputArray()(i, j, k) = subDiv_out()(0)(i, j, k);
+			val temp = subDiv_out()(0);
+
+			at (outputArray.home) {
+				for (i in x_min..x_max)
+					for (j in y_min..y_max)
+						for (k in z_min..z_max)
+							outputArray()(i, j, k) = temp(i, j, k);
+			}
 		}
 	}
 

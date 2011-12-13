@@ -48,6 +48,7 @@ public class thermal
 		/* START TIMING */
 		val starttime = Timer.milliTime();
 
+		var even:Boolean = false;
 		//do loop with calculations, alternating working arrays read/write
 		for (i in 1..iterations)
 		{
@@ -56,12 +57,13 @@ public class thermal
 			borderFill(B, x_source_size, y_source_size, z_source_size);
 
 			//do cell averaging
-			val even = (i % 2 == 0);
-			if (even)
+			even = (i % 2 == 0);
+			if (even) {
 				calc(A, B, x_source_size, y_source_size, z_source_size);
-			else
+			 } else {
 				calc(B, A, x_source_size, y_source_size, z_source_size);
-		
+			}
+
 			if (verbose) {
 				//Print intermediate data to the Console
 				//This should not be used in performance tests
@@ -74,10 +76,19 @@ public class thermal
 		/* STOP TIMING */
 		val stoptime = Timer.milliTime() - starttime;
 
+		val Output = new Array[Double](source.region);
+		if (even) {
+			for (i in Output.region)
+				Output(i) = B(i);
+		} else {
+			for (i in Output.region)
+				Output(i) = A(i);
+		}
+
 		//DONE
 		Console.OUT.println("DONE in " + stoptime + " milliseconds");
 		//Print final results to output file
-		OutputPrinter.printm("output.txt", A);
+		OutputPrinter.printm("output.txt", Output);
 	}
 
 	/**
