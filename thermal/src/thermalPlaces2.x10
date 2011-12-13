@@ -15,7 +15,7 @@ private static def findRegion(x_size:Int, y_size:Int, z_size:Int, numDivs:Int, d
 	if (div == 0) {
 		return 0..(x_size / 2 + 1)*0..(y_size + 1)*0..(z_size + 1);
 	} else {
-		return (x_size / 2 - 1)..(x_size + 1)*0..(y_size + 1)*0..(z_size + 1);
+		return (x_size / 2)..(x_size + 1)*0..(y_size + 1)*0..(z_size + 1);
 	}
 }
 
@@ -55,9 +55,7 @@ public static def main(args:Array[String](1)):void
 	val y_size = input_reg.max(1);
 	val z_size = input_reg.max(2);
 
-	val sub_reg = (0..x_size)*(0..y_size)*(0..z_size);
-
-	val x_divs = 2;
+	val x_divs = 1;
 	val y_divs = 1;
 	val z_divs = 1;
 
@@ -103,8 +101,8 @@ public static def main(args:Array[String](1)):void
 		clocked async at (Place.place(i % numPlaces))
 		{
 			//create working arrays
-			var A:Array[Double](3) = new Array[Double](sub_reg, 0.0);
-			var B:Array[Double](3) = new Array[Double](sub_reg, 0.0);
+			var A:Array[Double](3) = new Array[Double](regions(i), 0.0);
+			var B:Array[Double](3) = new Array[Double](regions(i), 0.0);
 
 			//create neighbor array
 			val neighbors:Rail[Boolean] = new Rail[Boolean](6, true);
@@ -144,6 +142,8 @@ public static def main(args:Array[String](1)):void
 					if (j == (iterations))
 						subDiv_out()(0) = B;
 				}
+
+				Clock.advanceAll();
 			}
 		}
 	}
@@ -166,8 +166,6 @@ public static def main(args:Array[String](1)):void
 				for (j in y_min..y_max)
 					for (k in z_min..z_max)
 						outputArray()(i, j, k) = subDiv_out()(0)(i, j, k);
-			Console.OUT.println(outputArray()(2, 2, 2));
-			Console.OUT.println(subDiv_out()(0)(2, 2, 2));
 		}
 	}
 
