@@ -31,19 +31,27 @@ public class OutputPrinter {
 	 * Printer p
 	 */
 	public static def printm(p:Printer, mat:Array[Double]) {
-		val x_size = mat.region.max(0);
-		val y_size = mat.region.max(1);
-		val z_size = mat.region.max(2);
+		val R = mat.region;
+		val x_min = R.min(0);
+		val x_max = R.max(0);
+		val y_min = R.min(1);
+		val y_max = R.max(1);
+		val z_min = R.min(2);
+		val z_max = R.max(2);
 
-		p.println(x_size + 1);
-		p.println(y_size + 1);
-		p.println(z_size + 1);
+		val x_size = x_max - x_min + 1;
+		val y_size = y_max - y_min + 1;
+		val z_size = z_max - z_min + 1;
 
-		for (k in 0..z_size) 
+		p.println(x_size);
+		p.println(y_size);
+		p.println(z_size);
+
+		for (k in z_min..z_max) 
 		{
-			for (j in 0..y_size) 
+			for (j in y_min..y_max) 
 			{
-				for (i in 0..x_size)
+				for (i in x_min..x_max)
 					p.printf("%.4f%s", mat(i,j,k), ((i == x_size)?"":", "));
 				p.println();
 		 	}
