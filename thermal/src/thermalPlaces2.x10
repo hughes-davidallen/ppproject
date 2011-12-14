@@ -11,11 +11,25 @@ public class thermalPlaces2
 
 private static def findRegion(x_size:Int, y_size:Int, z_size:Int, numDivs:Int, div:Int):Region(3)
 {
-	//needs more variety
-	if (div == 0) {
-		return 0..(x_size / 2 + 1)*0..(y_size + 1)*0..(z_size + 1);
+	if (numDivs == 1) {
+		return 0..x_size*0..y_size*0..z_size;
+	} else if (numDivs == 2) {
+		if (div == 0) {
+			return 0..(x_size / 2 + 1)*0..(y_size + 1)*0..(z_size + 1);
+		} else {
+			return (x_size / 2)..(x_size + 1)*0..(y_size + 1)*0..(z_size + 1);
+		}
+	} else if (numDivs == 8) {
+		val xstart = ((div & 1) == 0)?0:(x_size / 2);
+		val xend = ((div & 1) == 0)?(x_size / 2 + 1):(x_size + 1);
+		val ystart = ((div & 2) == 0)?0:(y_size / 2);
+		val yend = ((div & 2) == 0)?(y_size / 2 + 1):(y_size + 1);
+		val zstart = ((div & 4) == 0)?0:(z_size / 2);
+		val zend = ((div & 4) == 0)?(z_size / 2 + 1):(z_size + 1);
+
+		return xstart..xend*ystart..yend*zstart..zend;
 	} else {
-		return (x_size / 2)..(x_size + 1)*0..(y_size + 1)*0..(z_size + 1);
+		return 0..0*0..0*0..0;
 	}
 }
 
@@ -47,7 +61,6 @@ public static def main(args:Array[String](1)):void
 {
 	val source = InputParser.parse(args(0));
 	val iterations = Int.parse(args(1));
-	val num_subDivs = 2;
 	val numPlaces = Place.numPlaces();
 
 	val input_reg = source.region;
@@ -55,17 +68,30 @@ public static def main(args:Array[String](1)):void
 	val y_size = input_reg.max(1);
 	val z_size = input_reg.max(2);
 
-	val x_divs = 2;
-	val y_divs = 1;
-	val z_divs = 1;
-
-	val regions = new Rail[Region](num_subDivs);
-	for (i in 0..(num_subDivs - 1)) {
-		regions(i) = findRegion(x_size, y_size, z_size, num_subDivs, i);
+	val x_divs:Int, y_divs:Int, z_divs:Int;
+	if (numPlaces == 1) {
+		x_divs = 1;
+		y_divs = 1;
+		z_divs = 1;
+	} else if (numPlaces == 2) {
+		x_divs = 2;
+		y_divs = 1;
+		z_divs = 1;
+	} else if (numPlaces == 8) {
+		x_divs = 2;
+		y_divs = 2;
+		z_divs = 2;
+	} else {
+		return;
 	}
 
-	val subdivs:Array[Array[Double](3)](1) = new Array[Array[Double](3)](num_subDivs);
-	for (n in 0..(num_subDivs - 1)) {
+	val regions = new Rail[Region](numPlaces);
+	for (i in 0..(numPlaces - 1)) {
+		regions(i) = findRegion(x_size, y_size, z_size, numPlaces, i);
+	}
+
+	val subdivs:Array[Array[Double](3)](1) = new Array[Array[Double](3)](numPlaces);
+	for (n in 0..(numPlaces - 1)) {
 		subdivs(n) = new Array[Double](regions(n));
 		val x_min = regions(n).min(0) + 1;
 		val x_max = regions(n).max(0) - 1;
@@ -95,7 +121,7 @@ public static def main(args:Array[String](1)):void
 	val starttime = Timer.milliTime();
 
 	//iterate over subdivisions
-	clocked finish for (i in 0..(num_subDivs - 1))
+	clocked finish for (i in 0..(numPlaces - 1))
 	{
 		//assign subdivisions to places with asyncs, limit to numplaces
 		clocked async at (Place.place(i % numPlaces))
@@ -108,6 +134,7 @@ public static def main(args:Array[String](1)):void
 			val neighbors:Rail[Boolean] = new Rail[Boolean](6, true);
 
 			computeNeighbors(i, neighbors, x_divs, y_divs, z_divs);
+			Console.OUT.println("Place " + here.id + ": " + neighbors);
 
 			// copy input to arrays
 			Array.copy(subdivs(i), B);
@@ -155,7 +182,7 @@ public static def main(args:Array[String](1)):void
 	}
 
 	// copy each subdiv into output array
-	for (n in 0..(num_subDivs - 1)) //iterate with n to avoid name conflict
+	for (n in 0..(numPlaces - 1)) //iterate with n to avoid name conflict
 	{
 		//basically invert process that did subdivisions
 		at (Place.place(n % numPlaces)) 
@@ -200,16 +227,16 @@ public static def computeNeighbors(i:Int, neighbors:Rail[Boolean], x_divs:Int, y
 
 	//checking if along right and left sides of cube
 	val xpos = i % x_divs;
-	if (xpos == x_divs-1) {
+	if (xpos == x_divs - 1) {
 		neighbors(RIGHT) = false;
 	}
-	if(xpos == 0) {
+	if (xpos == 0) {
 		neighbors(LEFT) = false;
 	}
 
 	//checking if along top and bottom sides of cube
 	val ypos = (i / y_divs) % y_divs;
-	if (ypos == y_divs-1) {
+	if (ypos == y_divs - 1) {
 		neighbors(TOP) = false;
 	}
 	if (ypos == 0) {
@@ -218,7 +245,7 @@ public static def computeNeighbors(i:Int, neighbors:Rail[Boolean], x_divs:Int, y
 
 	//checking if along back and front sides of cube
 	val zpos = ((i / y_divs) / z_divs) % z_divs;
-	if (zpos == z_divs-1) {
+	if (zpos == z_divs - 1) {
 		neighbors(BACK) = false;
 	}
 	if (zpos == 0) {
@@ -270,39 +297,43 @@ public static def borderFillToShadow(A:Array[Double](3), shadow:Rail[Array[Doubl
 	//top
 	if(neighbors(TOP)) {
 		for (i in x_min..x_max)
-			for (k in z_min..z_max) (shadow(TOP))(i,k) = A(i, y_max, k);
+			for (k in z_min..z_max)
+				(shadow(TOP))(i,k) = A(i, y_max, k);
 	}
 
 	//bottom
 	if(neighbors(BOTTOM)) {
 		for (i in x_min..x_max)
-			for (k in z_min..z_max) (shadow(BOTTOM))(i,k) = A(i, y_min, k);
+			for (k in z_min..z_max)
+				(shadow(BOTTOM))(i,k) = A(i, y_min, k);
 	}
 
 	//front
 	if(neighbors(FRONT)) {
 		for (i in x_min..x_max)
-			for (j in y_min..y_max) (shadow(FRONT))(i,j) = A(i, j, z_min);
+			for (j in y_min..y_max)
+				(shadow(FRONT))(i,j) = A(i, j, z_min);
 	}
 
 	//back
 	if(neighbors(BACK)) {
 		for (i in x_min..x_max)
-			for (j in y_min..y_max) (shadow(BACK))(i,j) = A(i, j, z_max);
+			for (j in y_min..y_max)
+				(shadow(BACK))(i,j) = A(i, j, z_max);
 	}
 
 	//left
 	if(neighbors(LEFT)) {
 		for (j in y_min..y_max)
-			for (k in z_min..z_max) {
+			for (k in z_min..z_max)
 				(shadow(LEFT))(j,k) = A(x_min, j, k);
-			}
 	}
 
 	//right
 	if(neighbors(RIGHT)) {
 		for (j in y_min..y_max)
-			for (k in z_min..z_max) (shadow(RIGHT))(j,k) = A(x_max, j, k);
+			for (k in z_min..z_max)
+				(shadow(RIGHT))(j,k) = A(x_max, j, k);
 	}
 }
 
@@ -342,7 +373,7 @@ public static def borderFillFromShadow(A:Array[Double](3), shadow:PlaceLocalHand
 		val shad = shadow()(0)(BACK);
 		at (GR.home) {
 			for (i in x_min..x_max)
-				for (j in z_min..z_max)
+				for (j in y_min..y_max)
 					GR()(i, j, z_min) = shad(i, j);
 		}
 	}
@@ -351,7 +382,7 @@ public static def borderFillFromShadow(A:Array[Double](3), shadow:PlaceLocalHand
 		val shad = shadow()(0)(FRONT);
 		at (GR.home) {
 			for (i in x_min..x_max)
-				for (j in z_min..z_max)
+				for (j in y_min..y_max)
 					GR()(i, j, z_max) = shad(i, j);
 		}
 	}
