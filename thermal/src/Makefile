@@ -20,7 +20,7 @@ runPar_large: thermalPar.exe
 	salloc -n1 srun.x10sock ./$< input_large100.txt 100 false
 
 runPlaces_large: thermalPlaces2.exe
-	salloc -n2 srun.x10sock ./$< input_large100.txt 100
+	salloc -n8 srun.x10sock ./$< input_large100.txt 100
 
 %.exe: %.x10
 	x10c++ $(CPPFLAGS) $< -o $@
@@ -38,8 +38,8 @@ run: runSeq runPlaces
 
 run_large: runSeq_large runPlaces_large
 
-compare: run
-	diff -y output.txt outputPlaces.txt
+compare: run_large
+	diff output.txt outputPlaces.txt
 
 clean:
 	rm -f *.class *.java *.cc *.h *.exe
