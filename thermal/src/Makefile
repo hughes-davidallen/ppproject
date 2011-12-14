@@ -42,6 +42,6 @@ compare: run_large
 	diff output.txt outputPlaces.txt
 
 clean:
-	rm -f *.class *.java *.cc *.h *.exe
+	rm -f *.class *.java *.cc *.h
 
 .PHONY: thermal runSeq thermalPar runPar run run_large compare clean

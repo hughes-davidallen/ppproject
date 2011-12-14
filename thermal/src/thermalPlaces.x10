@@ -2,188 +2,455 @@ import x10.util.Timer;
 
 public class thermalPlaces
 {
-	private val source:Array[Double](3);
-	private val iterations:Int;
-	private val verbose:Boolean;
-	private var A:Array[Array[Double](3)];
-	private var B:Array[Array[Double](3)];
+	static val TOP = 0;
+	static val BOTTOM = 1;
+	static val FRONT = 2;
+	static val BACK = 3;
+	static val LEFT = 4;
+	static val RIGHT = 5;
 
-	/**
-	 * The command-line arguments to thermal are as follows:
-	 * args(0) is a string and represents the name of the file from which
-	 *         to read the input to the program
-	 * args(1) is an integer and represents the number of iterations for
-	 *         which to run the program
-	 * args(2) is either 'true' or 'false' and signifies whether to print
-	 *         intermediate results of the computation
+private static def findRegion(x_size:Int, y_size:Int, z_size:Int, numDivs:Int, div:Int):Region(3)
+{
+	if (numDivs == 1) {
+		return 0..x_size*0..y_size*0..z_size;
+	} else if (numDivs == 2) {
+		if (div == 0) {
+			return 0..(x_size / 2 + 1)*0..(y_size + 1)*0..(z_size + 1);
+		} else {
+			return (x_size / 2)..(x_size + 1)*0..(y_size + 1)*0..(z_size + 1);
+		}
+	} else if (numDivs == 8) {
+		val xstart = ((div & 1) == 0)?0:(x_size / 2);
+		val xend = ((div & 1) == 0)?(x_size / 2 + 1):(x_size + 1);
+		val ystart = ((div & 2) == 0)?0:(y_size / 2);
+		val yend = ((div & 2) == 0)?(y_size / 2 + 1):(y_size + 1);
+		val zstart = ((div & 4) == 0)?0:(z_size / 2);
+		val zend = ((div & 4) == 0)?(z_size / 2 + 1):(z_size + 1);
+
+		return xstart..xend*ystart..yend*zstart..zend;
+	} else {
+		return 0..0*0..0*0..0;
+	}
+}
+
+private static def extractRegions(reg:Region(3)):Rail[Array[Double](2)]
+{
+	val shadows = new Rail[Array[Double](2)](6);
+	val xx = reg.max(0);
+	val yx = reg.max(1);
+	val zx = reg.max(2);
+	val xn = reg.min(0);
+	val yn = reg.min(1);
+	val zn = reg.min(2);
+
+	/*
+	 * Shadow arrays should have same coordinates as the working arrays
+	 * to which they correspond
 	 */
-	public static def main(args:Array[String](1)):void
-	{
-		val s = InputParser.parse(args(0));
-		val i = Int.parse(args(1));
-		val v = Boolean.parse(args(2));
-		val places = new thermalPlaces(s, i, v);
-		places.run();
+	shadows(TOP) = new Array[Double](xn..xx*zn..zx, 0.0);
+	shadows(BOTTOM) = new Array[Double](xn..xx*zn..zx, 0.0);
+	shadows(FRONT) = new Array[Double](xn..xx*yn..yx, 0.0);
+	shadows(BACK) = new Array[Double](xn..xx*yn..yx, 0.0);
+	shadows(LEFT) = new Array[Double](yn..yx*zn..zx, 0.0);
+	shadows(RIGHT) = new Array[Double](yn..yx*zn..zx, 0.0);
+
+	return shadows;
+}
+
+public static def main(args:Array[String](1)):void
+{
+	val source = InputParser.parse(args(0));
+	val iterations = Int.parse(args(1));
+	val numPlaces = Place.numPlaces();
+
+	val input_reg = source.region;
+	val x_size = input_reg.max(0);
+	val y_size = input_reg.max(1);
+	val z_size = input_reg.max(2);
+
+	val x_divs:Int, y_divs:Int, z_divs:Int;
+	if (numPlaces == 1) {
+		x_divs = 1;
+		y_divs = 1;
+		z_divs = 1;
+	} else if (numPlaces == 2) {
+		x_divs = 2;
+		y_divs = 1;
+		z_divs = 1;
+	} else if (numPlaces == 8) {
+		x_divs = 2;
+		y_divs = 2;
+		z_divs = 2;
+	} else {
+		return;
 	}
 
-	public def this(s:Array[Double](3), i:Int, v:Boolean)
-	{
-		source = s;
-		iterations = i;
-		verbose = v;
+	val regions = new Rail[Region](numPlaces);
+	for (i in 0..(numPlaces - 1)) {
+		regions(i) = findRegion(x_size, y_size, z_size, numPlaces, i);
 	}
 
-	public def run():void
-	{
-		//get dimensions of source array
-		val source_reg:Region = source.region;
-		val x_source_size:Int = source_reg.max(0);
-		val y_source_size:Int = source_reg.max(1);
-		val z_source_size:Int = source_reg.max(2);
+	val subdivs:Array[Array[Double](3)](1) = new Array[Array[Double](3)](numPlaces);
+	for (n in 0..(numPlaces - 1)) {
+		subdivs(n) = new Array[Double](regions(n));
+		val x_min = regions(n).min(0) + 1;
+		val x_max = regions(n).max(0) - 1;
+		val y_min = regions(n).min(1) + 1;
+		val y_max = regions(n).max(1) - 1;
+		val z_min = regions(n).min(2) + 1;
+		val z_max = regions(n).max(2) - 1;
 
-		val numPlaces = Place.numPlaces();
-
-		//create new, larger region for border data
-		val work_reg:Region = ((0..(x_source_size + 1))
-			* (0..(y_source_size + 1)) * (0..(z_source_size+1)));
-
-		//create working arrays
-		A = new Array[Array[Double](3)](numPlaces, new Array[Double](work_reg, 0.0));
-		B = new Array[Array[Double](3)](numPlaces, new Array[Double](work_reg, 0.0));
-
-		fillPlaceArray(1, x_source_size, 1, y_source_size, 1, z_source_size);
-
-		singlePlace(A(here.id), B(here.id), x_source_size, y_source_size, z_source_size);
+		for (i in x_min..x_max)
+			for (j in y_min..y_max)
+				for(k in z_min..z_max)
+					subdivs(n)(i, j, k) = source(i, j, k);
 	}
 
-	private def fillPlaceArray(xstart:Int, xstop:Int, ystart:Int, ystop:Int, zstart:Int, zstop:Int):void
-	{
-		for (i in xstart..xstop) {
-			for (j in ystart..ystop) {
-				for (k in zstart..zstop) {
-					A(here.id)(i,j,k) = source(i,j,k);
-					B(here.id)(i,j,k) = source(i,j,k);
-				}
-			}
+	val subDiv_out = PlaceLocalHandle.make[Rail[Array[Double](3)]](Dist.makeUnique(PlaceGroup.WORLD), ()=>new Rail[Array[Double](3)](1));
+	val shadow = PlaceLocalHandle.make[Rail[Rail[Array[Double](2)]]](Dist.makeUnique(PlaceGroup.WORLD), ()=>new Rail[Rail[Array[Double](2)]](1));
+	for (p in Place.places()) {
+		at (p) {
+			shadow()(0) = extractRegions(regions(p.id));
+			subDiv_out()(0) = new Array[Double](regions(p.id), 0.0);
 		}
 	}
 
-	private def singlePlace(A:Array[Double](3), B:Array[Double](3),
-					x_source_size:Int, y_source_size:Int, z_source_size:Int)
+	val outputArray = new GlobalRef[Array[Double](3)](new Array[Double](input_reg, 0.0));
+
+	//This may be the wrong place to start timing
+	val starttime = Timer.milliTime();
+
+	//iterate over subdivisions
+	clocked finish for (i in 0..(numPlaces - 1))
 	{
-		/* START TIMING */
-		val starttime = Timer.milliTime();
-
-		val x_divs = (x_source_size - 1) / 25 + 1;
-		val y_divs = (y_source_size - 1) / 25 + 1;
-		val z_divs = (z_source_size - 1) / 25 + 1;
-
-		//do loop with calculations, alternating working arrays read/write
-		for (i in 1..iterations)
+		//assign subdivisions to places with asyncs, limit to numplaces
+		clocked async at (Place.place(i % numPlaces))
 		{
-			//fill in border data
-			borderFill(A, x_source_size, y_source_size, z_source_size);
-			borderFill(B, x_source_size, y_source_size, z_source_size);
+			//create working arrays
+			var A:Array[Double](3) = new Array[Double](regions(i), 0.0);
+			var B:Array[Double](3) = new Array[Double](regions(i), 0.0);
 
-			//do cell averaging
-			val even = (i % 2 == 0);
-			if (even)
-				calc(A, B, x_source_size, y_source_size, z_source_size, x_divs, y_divs, z_divs);
-			else
-				calc(B, A, x_source_size, y_source_size, z_source_size, x_divs, y_divs, z_divs);
-		
-			if (verbose) {
-				//Print intermediate data to the Console
-				//This should not be used in performance tests
-				Console.OUT.println("Iteration "+ i + ":");
-				OutputPrinter.printm(even?B:A);
-				Console.OUT.println("--------------------------");
+			//create neighbor array
+			val neighbors:Rail[Boolean] = new Rail[Boolean](6, true);
+
+			computeNeighbors(i, neighbors, x_divs, y_divs, z_divs);
+			//Console.OUT.println("Place " + here.id + ": " + neighbors);
+
+			// copy input to arrays
+			Array.copy(subdivs(i), B);
+
+			val x_local_divs = (regions(i).max(0) - regions(i).min(0) - 1) / 25 + 1;
+			val y_local_divs = (regions(i).max(1) - regions(i).min(1) - 1) / 25 + 1;
+			val z_local_divs = (regions(i).max(2) - regions(i).min(2) - 1) / 25 + 1;
+
+			//do for all iterations
+			for (j in 1..iterations)
+			{
+				// copy out borders to shadow array, pick correct array
+				borderFillLocal(A);
+				borderFillLocal(B);
+				val even = (j % 2 == 0);  //*** could maybe make this a function based on even/odd
+				if (even) {
+					borderFillToShadow(A, shadow()(0), neighbors);
+				} else {
+					borderFillToShadow(B, shadow()(0), neighbors);
+				}
+
+				// blocking clock
+				Clock.advanceAll();
+	
+				// copy required borders from shadow array, pick correct array
+				if (even) {
+					borderFillFromShadow(A, shadow, neighbors, x_divs, y_divs, z_divs);
+					calc(A, B, x_local_divs, y_local_divs, z_local_divs);
+					
+					//if last iteration
+					if (j == (iterations))
+						subDiv_out()(0) = B;
+				} else {
+					borderFillFromShadow(B, shadow, neighbors, x_divs, y_divs, z_divs);
+					calc(B, A, x_local_divs, y_local_divs, z_local_divs);
+					
+					//if last iteration
+					if (j == (iterations))
+						subDiv_out()(0) = A;
+				}
+
+				Clock.advanceAll();
 			}
 		}
-
-		/* STOP TIMING */
-		val stoptime = Timer.milliTime() - starttime;
-
-		//DONE
-		Console.OUT.println("DONE in " + stoptime + " milliseconds");
-		//Print final results to output file
-		OutputPrinter.printm("outputPlaces.txt", A);
 	}
-	
 
-	/**
-	 * Looks at each cell in the array and determines the next value for
-	 * each cell.  The next value is the average of the values of the six
-	 * cells that share a face with the cell in question.
-	 * The last three arguments refer to the size of the interior array,
-	 * not the outer array.
-	 */
-	private def calc(A1:Array[Double](3), A2:Array[Double](3),
-							x_size:Int, y_size:Int, z_size:Int,
-							x_divs:Int, y_divs:Int, z_divs:Int)
+	// copy each subdiv into output array
+	for (n in 0..(numPlaces - 1)) //iterate with n to avoid name conflict
 	{
-		var zcount:Int = 0;
-		val xlen = x_size / x_divs;
-		val ylen = y_size / y_divs;
-		val zlen = z_size / z_divs;
-		finish for (x in 0..(x_divs - 1)) async {
-			for (y in 0..(y_divs - 1)) async {
-				for (z in 0..(z_divs - 1)) async {
-					val xstart = x * xlen + 1;
-					val xend = (x == (x_divs - 1))?x_size:xstart + xlen - 1;
-					for (i in xstart..xend) {
-						val ystart = y * xlen + 1;
-						val yend = (y == (y_divs - 1))?y_size:ystart + ylen - 1;
-						for (j in ystart..yend) {
-							val zstart = z * zlen + 1;
-							val zend = (z == (z_divs - 1))?z_size:zstart + zlen - 1;
-							for (k in zstart..zend) {
-								//do math with A1 pixels, write to A2
-								A2(i,j,k) =	(A1(i+1, j, k) +
-											A1(i-1, j, k) +
-											A1(i, j+1, k) +
-											A1(i, j-1, k) +
-											A1(i, j, k+1) +
-										 	A1(i, j, k-1)) / 6;
-							}
+		//basically invert process that did subdivisions
+		at (Place.place(n % numPlaces)) 
+		{
+			val R = subDiv_out()(0).region;
+			val x_min = R.min(0) + 1;
+			val x_max = R.max(0) - 1;
+			val y_min = R.min(1) + 1;
+			val y_max = R.max(1) - 1;
+			val z_min = R.min(2) + 1;
+			val z_max = R.max(2) - 1;
+
+			val temp = subDiv_out()(0);
+
+			at (outputArray.home) {
+				for (i in x_min..x_max)
+					for (j in y_min..y_max)
+						for (k in z_min..z_max)
+							outputArray()(i, j, k) = temp(i, j, k);
+			}
+		}
+	}
+
+	/* STOP TIMING */
+	val stoptime = Timer.milliTime() - starttime;
+
+	//DONE
+	Console.OUT.println("DONE in " + stoptime + " milliseconds");
+	//Print final results to output file
+	OutputPrinter.printm("outputPlaces.txt", outputArray());
+}
+
+public static def computeNeighbors(i:Int, neighbors:Rail[Boolean], x_divs:Int, y_divs:Int, z_divs:Int)
+{
+	/* 
+	 * Mapping of indices to faces:
+	 * 0: Top		4: Left
+	 * 1: Bottom	5: Right
+	 * 2: Front
+	 * 3: Back
+	 */
+
+	//checking if along right and left sides of cube
+	val xpos = i % x_divs;
+	if (xpos == x_divs - 1) {
+		neighbors(RIGHT) = false;
+	}
+	if (xpos == 0) {
+		neighbors(LEFT) = false;
+	}
+
+	//checking if along top and bottom sides of cube
+	val ypos = (i / y_divs) % y_divs;
+	if (ypos == y_divs - 1) {
+		neighbors(TOP) = false;
+	}
+	if (ypos == 0) {
+		neighbors(BOTTOM) = false;
+	}
+
+	//checking if along back and front sides of cube
+	val zpos = ((i / y_divs) / z_divs) % z_divs;
+	if (zpos == z_divs - 1) {
+		neighbors(BACK) = false;
+	}
+	if (zpos == 0) {
+		neighbors(FRONT) = false;
+	}
+
+}
+
+public static def borderFillLocal(A:Array[Double](3))
+{
+	val reg = A.region;
+	val x_min = reg.min(0) + 1;
+	val x_max = reg.max(0) - 1;
+	val y_min = reg.min(1) + 1;
+	val y_max = reg.max(1) - 1;
+	val z_min = reg.min(2) + 1;
+	val z_max = reg.max(2) - 1;
+
+	for (i in x_min..x_max)
+		for (j in y_min..y_max) {
+			A(i, j, z_min - 1) = A(i, j, z_min);
+			A(i, j, z_max + 1) = A(i, j, z_max);
+		}
+	for (j in y_min..y_max)
+		for (k in z_min..z_max) {
+			A(x_min - 1, j, k) = A(x_min, j, k);
+			A(x_max + 1, j, k) = A(x_max, j, k);
+		}
+	for (i in x_min..x_max)
+		for (k in z_min..z_max) {
+			A(i, y_min - 1, k) = A(i, y_min, k);
+			A(i, y_max + 1, k) = A(i, y_max, k);
+		}
+			
+}
+
+//depending on how shadow is implemented, this will need to be tweaked to make
+//sure we're writing to the correct places
+public static def borderFillToShadow(A:Array[Double](3), shadow:Rail[Array[Double](2)], neighbors:Rail[Boolean])
+{
+	val reg = A.region;
+	val x_min = reg.min(0);
+	val x_max = reg.max(0);
+	val y_min = reg.min(1);
+	val y_max = reg.max(1);
+	val z_min = reg.min(2);
+	val z_max = reg.max(2);
+
+	//top
+	if(neighbors(TOP)) {
+		for (i in x_min..x_max)
+			for (k in z_min..z_max)
+				(shadow(TOP))(i,k) = A(i, y_max, k);
+	}
+
+	//bottom
+	if(neighbors(BOTTOM)) {
+		for (i in x_min..x_max)
+			for (k in z_min..z_max)
+				(shadow(BOTTOM))(i,k) = A(i, y_min, k);
+	}
+
+	//front
+	if(neighbors(FRONT)) {
+		for (i in x_min..x_max)
+			for (j in y_min..y_max)
+				(shadow(FRONT))(i,j) = A(i, j, z_min);
+	}
+
+	//back
+	if(neighbors(BACK)) {
+		for (i in x_min..x_max)
+			for (j in y_min..y_max)
+				(shadow(BACK))(i,j) = A(i, j, z_max);
+	}
+
+	//left
+	if(neighbors(LEFT)) {
+		for (j in y_min..y_max)
+			for (k in z_min..z_max)
+				(shadow(LEFT))(j,k) = A(x_min, j, k);
+	}
+
+	//right
+	if(neighbors(RIGHT)) {
+		for (j in y_min..y_max)
+			for (k in z_min..z_max)
+				(shadow(RIGHT))(j,k) = A(x_max, j, k);
+	}
+}
+
+//depending on how shadow is implemented, this will need to be tweaked to
+//make sure we're reading from the correct places
+public static def borderFillFromShadow(A:Array[Double](3), shadow:PlaceLocalHandle[Rail[Rail[Array[Double](2)]]], neighbors:Rail[Boolean], x_divs:Int, y_divs:Int, z_divs:Int)
+{
+	val reg = A.region;
+	val x_min = reg.min(0);
+	val x_max = reg.max(0);
+	val y_min = reg.min(1);
+	val y_max = reg.max(1);
+	val z_min = reg.min(2);
+	val z_max = reg.max(2);
+
+	val GR = new GlobalRef[Array[Double](3)](A);
+
+	if (neighbors(TOP)) at (here.next(x_divs)) {
+		val shad = shadow()(0)(BOTTOM);
+		at (GR.home) {
+			for (i in x_min..x_max)
+				for (k in z_min..z_max)
+					GR()(i, y_max, k) = shad(i, k);
+		}
+	}
+
+	if (neighbors(BOTTOM)) at (here.prev(x_divs)) {
+		val shad = shadow()(0)(TOP);
+		at (GR.home) {
+			for (i in x_min..x_max)
+				for (k in z_min..z_max)
+					GR()(i, y_min, k) = shad(i, k);
+		}
+	}
+
+	if (neighbors(FRONT)) at (here.prev(x_divs * y_divs)) {
+		val shad = shadow()(0)(BACK);
+		at (GR.home) {
+			for (i in x_min..x_max)
+				for (j in y_min..y_max)
+					GR()(i, j, z_min) = shad(i, j);
+		}
+	}
+
+	if (neighbors(BACK)) at (here.next(x_divs * y_divs)) {
+		val shad = shadow()(0)(FRONT);
+		at (GR.home) {
+			for (i in x_min..x_max)
+				for (j in y_min..y_max)
+					GR()(i, j, z_max) = shad(i, j);
+		}
+	}
+
+	if (neighbors(LEFT)) at (here.prev()) {
+		val shad = shadow()(0)(RIGHT);
+		at (GR.home) {
+			for (j in y_min..y_max)
+				for (k in z_min..z_max)
+					GR()(x_min, j, k) = shad(j, k);
+		}
+	}
+
+	if (neighbors(RIGHT)) at (here.next()) {
+		val shad = shadow()(0)(LEFT);
+		at (GR.home) {
+			for (j in y_min..y_max)
+				for (k in z_min..z_max) {
+					GR()(x_max, j, k) = shad(j, k);
+				}
+		}
+	}
+}
+
+//This method is called once per place per iteration
+public static def calc(A1:Array[Double](3), A2:Array[Double](3), x_divs:Int, y_divs:Int, z_divs:Int)
+{
+/* PLEASE CHECK FENCE POSTS */
+	val reg = A1.region;
+	val x_min = reg.min(0) + 1;
+	val x_max = reg.max(0) - 1;
+	val y_min = reg.min(1) + 1;
+	val y_max = reg.max(1) - 1;
+	val z_min = reg.min(2) + 1;
+	val z_max = reg.max(2) - 1;
+
+	val x_size = x_max - x_min + 1;
+	val y_size = y_max - y_min + 1;
+	val z_size = z_max - z_min + 1;
+
+	val xlen = x_size / x_divs;
+	val ylen = y_size / y_divs;
+	val zlen = z_size / z_divs;
+	finish for (x in 0..(x_divs - 1)) async {
+		for (y in 0..(y_divs - 1)) async {
+			for (z in 0..(z_divs - 1)) async {
+				val xstart = x * xlen + x_min;
+				val xend = (x == (x_divs - 1))?x_max:xstart + xlen - 1;
+				for (i in xstart..xend) {
+					val ystart = y * ylen + y_min;
+					val yend = (y == (y_divs - 1))?y_max:ystart + ylen - 1;
+					for (j in ystart..yend) {
+						val zstart = z * zlen + z_min;
+						val zend = (z == (z_divs - 1))?z_max:zstart + zlen - 1;
+						for (k in zstart..zend) {
+							//do math with A1 pixels, write to A2
+							A2(i,j,k) =	(A1(i+1, j, k) +
+										A1(i-1, j, k) +
+										A1(i, j+1, k) +
+										A1(i, j-1, k) +
+										A1(i, j, k+1) +
+									 	A1(i, j, k-1)) / 6;
 						}
 					}
 				}
 			}
 		}
 	}
+}
 
-	/**
-	 * Populates the borders (outermost faces) of the cube.  This
-	 * implementation assigns the nearest value in the interior cube to
-	 * each border cell.
-	 * The last three arguments to this method refer to the size of the
-	 * interior array, not the outer array.
-	 */
-	private def borderFill(A:Array[Double](3), x_max:Int, y_max:Int,
-									z_max:Int)
-	{
-		finish {
-			//Top and Bottom
-			async for (i in 1..x_max)
-				for (j in 1..y_max) {
-					A(i, j, 0) = A(i, j, 1);
-					A(i, j, z_max + 1) = A(i, j, z_max);
-				}
-
-			//Front and Back
-			async for (i in 1..x_max)
-				for (k in 1..z_max) {
-					A(i, 0, k) = A(i, 1, k);
-					A(i, y_max + 1, k) = A(i, y_max, k);
-				}
-
-			//Left and Right
-			for (j in 1..y_max)
-				for (k in 1..z_max) {
-					A(0, j, k) = A(1, j, k);
-					A(x_max + 1, j, k) = A(x_max, j, k);
-				}
-		}
-	}
 }

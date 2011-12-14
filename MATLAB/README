@@ -24,6 +24,8 @@ ThermalVector.m
 	  of our x10 simluation and displays it in an interactive way to the end
 	  user
 	  
+	***Be sure to change the file path and file name in the first line of that .m file
+
 cyl.m
 
 	- This is a matlab script we use to generate an arbitrary-sized input for

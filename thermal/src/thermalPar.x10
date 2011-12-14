@@ -52,11 +52,13 @@ public class thermalPar
 		val y_divs = (y_source_size - 1) / 25 + 1;
 		val z_divs = (z_source_size - 1) / 25 + 1;
 
+		var even:Boolean = false;
+
 		//do loop with calculations, alternating working arrays read/write
 		for (i in 1..iterations)
 		{
 			//do cell averaging
-			val even = (i % 2 == 0);
+			even = (i % 2 == 0);
 			if (even) {
 				borderFill(A, x_source_size, y_source_size, z_source_size);
 				calc(A, B, x_source_size, y_source_size, z_source_size, x_divs, y_divs, z_divs);
@@ -77,10 +79,20 @@ public class thermalPar
 		/* STOP TIMING */
 		val stoptime = Timer.milliTime() - starttime;
 
+		//pick array to output
+		val Output = new Array[Double](source.region);
+		if (even) {
+			for (i in Output.region)
+				Output(i) = B(i);
+		} else {
+			for (i in Output.region)
+				Output(i) = A(i);
+		}
+
 		//DONE
 		Console.OUT.println("DONE in " + stoptime + " milliseconds");
 		//Print final results to output file
-		OutputPrinter.printm("outputPar.txt", A);
+		OutputPrinter.printm("outputPar.txt", Output);
 	}
 
 	/**
