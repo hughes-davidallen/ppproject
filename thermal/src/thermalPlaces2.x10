@@ -55,7 +55,7 @@ public static def main(args:Array[String](1)):void
 	val y_size = input_reg.max(1);
 	val z_size = input_reg.max(2);
 
-	val x_divs = 1;
+	val x_divs = 2;
 	val y_divs = 1;
 	val z_divs = 1;
 
@@ -108,21 +108,25 @@ public static def main(args:Array[String](1)):void
 			val neighbors:Rail[Boolean] = new Rail[Boolean](6, true);
 
 			computeNeighbors(i, neighbors, x_divs, y_divs, z_divs);
+			Console.OUT.println("Outside the function: " + neighbors);
 
 			// copy input to arrays
-			A = subdivs(i);
-			B = subdivs(i);
+			Array.copy(subdivs(i), B);
 
 			//do for all iterations
 			for (j in 1..iterations)
 			{
+				Console.OUT.println("This has run " + j);
 				// copy out borders to shadow array, pick correct array
-				val even = (i % 2 == 0);  //*** could maybe make this a function based on even/odd
-				if (even)
-					borderFillToShadow(B, shadow()(0), neighbors);
-				else
+				borderFillLocal(A);
+				borderFillLocal(B);
+				val even = (j % 2 == 0);  //*** could maybe make this a function based on even/odd
+				if (even) {
 					borderFillToShadow(A, shadow()(0), neighbors);
-				
+				} else {
+					borderFillToShadow(B, shadow()(0), neighbors);
+				}
+
 				// blocking clock
 				Clock.advanceAll();
 	
@@ -133,14 +137,16 @@ public static def main(args:Array[String](1)):void
 					
 					//if last iteration
 					if (j == (iterations))
-						subDiv_out()(0) = A;
+						subDiv_out()(0) = B;
 				} else {
 					borderFillFromShadow(B, shadow, neighbors, x_divs, y_divs, z_divs);
+					Console.OUT.println("Left: " + shadow()(0)(LEFT)(6, 6));
+					Console.OUT.println("Right: " + shadow()(0)(RIGHT)(6, 6));
 					calc(B, A, x_divs, y_divs, z_divs);
 					
 					//if last iteration
 					if (j == (iterations))
-						subDiv_out()(0) = B;
+						subDiv_out()(0) = A;
 				}
 
 				Clock.advanceAll();
@@ -218,6 +224,36 @@ public static def computeNeighbors(i:Int, neighbors:Rail[Boolean], x_divs:Int, y
 	if (zpos == 0) {
 		neighbors(FRONT) = false;
 	}
+
+	Console.OUT.println("Place " + here.id + ": " + neighbors);
+}
+
+public static def borderFillLocal(A:Array[Double](3))
+{
+	val reg = A.region;
+	val x_min = reg.min(0) + 1;
+	val x_max = reg.max(0) - 1;
+	val y_min = reg.min(1) + 1;
+	val y_max = reg.max(1) - 1;
+	val z_min = reg.min(2) + 1;
+	val z_max = reg.max(2) - 1;
+
+	for (i in x_min..x_max)
+		for (j in y_min..y_max) {
+			A(i, j, z_min - 1) = A(i, j, z_min);
+			A(i, j, z_max + 1) = A(i, j, z_max);
+		}
+	for (j in y_min..y_max)
+		for (k in z_min..z_max) {
+			A(x_min - 1, j, k) = A(x_min, j, k);
+			A(x_max + 1, j, k) = A(x_max, j, k);
+		}
+	for (i in x_min..x_max)
+		for (k in z_min..z_max) {
+			A(i, y_min - 1, k) = A(i, y_min, k);
+			A(i, y_max + 1, k) = A(i, y_max, k);
+		}
+			
 }
 
 //depending on how shadow is implemented, this will need to be tweaked to make
@@ -235,37 +271,42 @@ public static def borderFillToShadow(A:Array[Double](3), shadow:Rail[Array[Doubl
 	//top
 	if(neighbors(TOP)) {
 		for (i in x_min..x_max)
-			for (k in z_min..z_max) (shadow(0))(i,k) = A(i, y_max, k);
+			for (k in z_min..z_max) (shadow(TOP))(i,k) = A(i, y_max, k);
 	}
 
 	//bottom
 	if(neighbors(BOTTOM)) {
 		for (i in x_min..x_max)
-			for (k in z_min..z_max) (shadow(1))(i,k) = A(i, y_min, k);
+			for (k in z_min..z_max) (shadow(BOTTOM))(i,k) = A(i, y_min, k);
 	}
 
 	//front
 	if(neighbors(FRONT)) {
 		for (i in x_min..x_max)
-			for (j in y_min..y_max) (shadow(2))(i,j) = A(i, j, z_min);
+			for (j in y_min..y_max) (shadow(FRONT))(i,j) = A(i, j, z_min);
 	}
 
 	//back
 	if(neighbors(BACK)) {
 		for (i in x_min..x_max)
-			for (j in y_min..y_max) (shadow(3))(i,j) = A(i, j, z_max);
+			for (j in y_min..y_max) (shadow(BACK))(i,j) = A(i, j, z_max);
 	}
 
 	//left
 	if(neighbors(LEFT)) {
+		Console.OUT.println("Filling to the LEFT border of place " + here.id);
 		for (j in y_min..y_max)
-			for (k in z_min..z_max) (shadow(4))(j,k) = A(x_min, j, k);
+			for (k in z_min..z_max) {
+				(shadow(LEFT))(j,k) = A(x_min, j, k);
+				Console.OUT.println(shadow(LEFT)(j, k));
+			}
 	}
 
 	//right
 	if(neighbors(RIGHT)) {
+		Console.OUT.println("Filling to the RIGHT border of place " + here.id);
 		for (j in y_min..y_max)
-			for (k in z_min..z_max) (shadow(5))(j,k) = A(x_max, j, k);
+			for (k in z_min..z_max) (shadow(RIGHT))(j,k) = A(x_max, j, k);
 	}
 }
 
@@ -281,16 +322,24 @@ public static def borderFillFromShadow(A:Array[Double](3), shadow:PlaceLocalHand
 	val z_min = reg.min(2);
 	val z_max = reg.max(2);
 
+	val GR = new GlobalRef[Array[Double](3)](A);
+
 	if (neighbors(TOP)) at (here.next(x_divs)) {
-		for (i in x_min..x_max)
-			for (k in z_min..z_max)
-				A(i, y_max, k) = shadow()(0)(BOTTOM)(i, k);
+		val shad = shadow()(0)(BOTTOM);
+		at (GR.home) {
+			for (i in x_min..x_max)
+				for (k in z_min..z_max)
+					GR()(i, y_max, k) = shad(i, k);
+		}
 	}
 
 	if (neighbors(BOTTOM)) at (here.prev(x_divs)) {
-		for (i in x_min..x_max)
-			for (k in z_min..z_max)
-				A(i, y_min, k) = shadow()(0)(TOP)(i, k);
+		val shad = shadow()(0)(TOP);
+		at (GR.home) {
+			for (i in x_min..x_max)
+				for (k in z_min..z_max)
+					GR()(i, y_min, k) = shad(i, k);
+		}
 	}
 
 	if (neighbors(FRONT)) at (here.prev(x_divs * y_divs)) {
@@ -298,6 +347,7 @@ public static def borderFillFromShadow(A:Array[Double](3), shadow:PlaceLocalHand
 			for (j in z_min..z_max)
 				A(i, j, z_min) = shadow()(0)(BACK)(i, j);
 	}
+
 	if (neighbors(BACK)) at (here.next(x_divs * y_divs)) {
 		for (i in x_min..x_max)
 			for (j in z_min..z_max)
@@ -305,15 +355,25 @@ public static def borderFillFromShadow(A:Array[Double](3), shadow:PlaceLocalHand
 	}
 
 	if (neighbors(LEFT)) at (here.prev()) {
-		for (j in y_min..y_max)
-			for (k in z_min..z_max)
-				A(x_min, j, k) = shadow()(0)(RIGHT)(j, k);
+		Console.OUT.println("Filling from the LEFT border of place " + here.id);
+		val shad = shadow()(0)(RIGHT);
+		at (GR.home) {
+			for (j in y_min..y_max)
+				for (k in z_min..z_max)
+					GR()(x_min, j, k) = shad(j, k);
+		}
 	}
 
 	if (neighbors(RIGHT)) at (here.next()) {
-		for (j in y_min..y_max)
-			for (k in z_min..z_max)
-				A(x_max, j, k) = shadow()(0)(LEFT)(j, k);
+		Console.OUT.println("Filling from the RIGHT border of place " + here.id);
+		val shad = shadow()(0)(LEFT);
+		at (GR.home) {
+			for (j in y_min..y_max)
+				for (k in z_min..z_max) {
+					A(x_max, j, k) = shad(j, k);
+					Console.OUT.println(A(x_max, j, k));
+				}
+		}
 	}
 }
 

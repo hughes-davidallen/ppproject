@@ -26,13 +26,13 @@ runPlaces_large: thermalPlaces2.exe
 	x10c++ $(CPPFLAGS) $< -o $@
 
 runSeq: thermal
-	x10 $< input.txt 7 false
+	x10 $< input_large10.txt 1 false
 
 runPar: thermalPar
-	x10 $< input.txt 7 false
+	x10 $< input_large10.txt 1 false
 
 runPlaces: thermalPlaces2
-	x10 $< input.txt 7
+	x10 $< input_large10.txt 1
 
 run: runSeq runPlaces
 
