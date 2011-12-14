@@ -1,8 +1,8 @@
 %hardcoded size of array, needs to be 
 %changed here in the code
-x = 800;
-y = 800;
-z = 800;
+x = 300;
+y = 300;
+z = 300;
 
 %allocate array of desired size
 A = zeros(x,y,z);
@@ -22,7 +22,7 @@ for k = 1 : z
 end
 
 %print to file
-fid = fopen('input_large800.txt', 'w');
+fid = fopen('input_large300.txt', 'w');
 
 fprintf(fid, '%d\n', x);
 fprintf(fid, '%d\n', y);
