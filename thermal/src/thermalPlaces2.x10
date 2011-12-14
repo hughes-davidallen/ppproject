@@ -112,6 +112,10 @@ public static def main(args:Array[String](1)):void
 			// copy input to arrays
 			Array.copy(subdivs(i), B);
 
+			val x_local_divs = (regions(i).max(0) - regions(i).min(0) - 1) / 25 + 1;
+			val y_local_divs = (regions(i).max(1) - regions(i).min(1) - 1) / 25 + 1;
+			val z_local_divs = (regions(i).max(2) - regions(i).min(2) - 1) / 25 + 1;
+
 			//do for all iterations
 			for (j in 1..iterations)
 			{
@@ -131,14 +135,14 @@ public static def main(args:Array[String](1)):void
 				// copy required borders from shadow array, pick correct array
 				if (even) {
 					borderFillFromShadow(A, shadow, neighbors, x_divs, y_divs, z_divs);
-					calc(A, B, x_divs, y_divs, z_divs);
+					calc(A, B, x_local_divs, y_local_divs, z_local_divs);
 					
 					//if last iteration
 					if (j == (iterations))
 						subDiv_out()(0) = B;
 				} else {
 					borderFillFromShadow(B, shadow, neighbors, x_divs, y_divs, z_divs);
-					calc(B, A, x_divs, y_divs, z_divs);
+					calc(B, A, x_local_divs, y_local_divs, z_local_divs);
 					
 					//if last iteration
 					if (j == (iterations))
